@@ -1,0 +1,13 @@
+hash: dc0ea337eec8dd9c61fcbc588ab7337c258fb89b8f3a900d09a7ff48d6e5e6c4
+updated: 2017-07-20T13:16:20.640782984+02:00
+imports:
+- name: github.com/pkg/profile
+  version: 5b67d428864e92711fcbd2f8629456121a56d91f
+- name: github.com/xeipuuv/gojsonschema
+  version: 0c8571ac0ce161a5feb57375a9cdf148c98c0f70
+- name: gopkg.in/gographics/imagick.v3
+  version: a6d52db195b160b6340e212c8638eb692bdd249a
+  subpackages:
+  - imagick
+  - imagick/types
+testImports: []
