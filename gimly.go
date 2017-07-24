@@ -38,10 +38,14 @@ func GetImage(w rest.ResponseWriter, r *rest.Request) {
     defer imagick.Terminate()
 
     // Чтение и валидация запроса
-    request := models.ReadRequest(r)
+    data := models.PostData{}
+    if err := r.DecodeJsonPayload(&data); err != nil {
+        rest.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
 
     // В этот канал будем отправлять искажённые слои
-    channel := make(chan *imagick.MagickWand, len(request.Layers))
+    channel := make(chan *imagick.MagickWand, len(data.Layers))
 
     // Финальное изображение
     image := imagick.NewMagickWand()
@@ -50,19 +54,20 @@ func GetImage(w rest.ResponseWriter, r *rest.Request) {
     pw := imagick.NewPixelWand()
     pw.SetColor("none")
 
-    image.NewImage(request.Height, request.Width, pw)
+    image.NewImage(data.Height, data.Width, pw)
     image.SetImageFormat("JPG") // TODO взять формат из запроса
 
     // Чтобы на месте перемещённых пикселей была прозрачность
     image.SetImageVirtualPixelMethod(imagick.VIRTUAL_PIXEL_TRANSPARENT)
 
     // Запустить искажение всех слоёв в отдельных потоках, результат прилетит в канал channel
-    for _, layer := range request.Layers {
+    for _, layer := range data.Layers {
         go models.DistortLayer(channel, layer)
     }
 
-    // Подписываемся на канал и ждём данных от горутин
-    for range request.Layers {
+    // Подписываемся на канал, ждём данных от горутин и накладываем слои на финальное изображение
+    // TODO
+    for range data.Layers {
         select {
         case layer := <-channel:
             image.CompositeImage(layer, imagick.COMPOSITE_OP_OVER, false, 0, 0) // TODO top, left
