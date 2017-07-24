@@ -2,3 +2,4 @@ package: gimly
 import:
 - package: github.com/pkg/profile
 - package: github.com/xeipuuv/gojsonschema
+- package: github.com/joho/godotenv

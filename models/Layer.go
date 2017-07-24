@@ -26,29 +26,45 @@ type Layer struct {
 }
 
 // TODO получать оверлей картинку в отдельном треде, пока идёт искажение основного слоя
-func MaskLayer(mw *imagick.MagickWand, layer Layer) (*imagick.MagickWand) {
+func MaskLayer(mw *imagick.MagickWand, layer Layer) (*imagick.MagickWand, error) {
     overlay := imagick.NewMagickWand()
 
     // Получаем оверлей по HTTP от файлменеджера
-    response, _ := http.Get(layer.OverlayPath)
+    response, err := http.Get(layer.OverlayPath)
+    if err != nil {
+        return mw, err
+    }
+
     defer response.Body.Close()
-    data, _ := ioutil.ReadAll(response.Body)
+    data,err := ioutil.ReadAll(response.Body)
+    if err != nil {
+        return mw, err
+    }
 
     overlay.ReadImageBlob(data)
     overlay.SetImageVirtualPixelMethod(imagick.VIRTUAL_PIXEL_TRANSPARENT)
 
-    mw.CompositeImage(overlay, imagick.COMPOSITE_OP_OVER, false, 0, 0) // TODO top, left
+    mw.CompositeImage(overlay, imagick.COMPOSITE_OP_OVER, false, int(layer.Left), int(layer.Top))
 
-    return mw
+    return mw, err
 }
 
-func DistortLayer(channel chan *imagick.MagickWand, layer Layer) {
+func DistortLayer(channel chan *imagick.MagickWand, errors chan error, layer Layer) {
     mw := imagick.NewMagickWand()
 
     // Получаем слой по HTTP от файлменеджера
-    response, _ := http.Get(layer.Path)
+    response, err := http.Get(layer.Path)
+    if err != nil {
+        errors <- err
+        return
+    }
+
     defer response.Body.Close()
-    data, _ := ioutil.ReadAll(response.Body)
+    data, err := ioutil.ReadAll(response.Body)
+    if err != nil {
+        errors <- err
+        return
+    }
 
     mw.ReadImageBlob(data)
     mw.SetImageVirtualPixelMethod(imagick.VIRTUAL_PIXEL_TRANSPARENT)
@@ -56,6 +72,13 @@ func DistortLayer(channel chan *imagick.MagickWand, layer Layer) {
     // Само искажение, самая долгая операция
     mw.DistortImage(imagick.DISTORTION_POLYNOMIAL, layer.DistortionMatrix, false)
 
-    // Отдаём в канал изображение после наложения маски
-    channel <- MaskLayer(mw, layer)
+    // Накладываем маску на слой
+    mw, err = MaskLayer(mw, layer)
+    if err != nil {
+        errors <- err
+        return
+    }
+
+    // Отдаём в канал изображение
+    channel <- mw
 }
