@@ -3,3 +3,5 @@ import:
 - package: github.com/pkg/profile
 - package: github.com/xeipuuv/gojsonschema
 - package: github.com/joho/godotenv
+- package: github.com/ant0ine/go-json-rest/rest
+- package: gopkg.in/gographics/imagick.v3/imagick
