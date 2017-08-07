@@ -8,6 +8,8 @@ import (
     "github.com/ant0ine/go-json-rest/rest"
     "github.com/joho/godotenv"
     "os"
+    "sort"
+    "fmt"
 )
 
 func main() {
@@ -18,7 +20,7 @@ func main() {
 
     api := rest.NewApi()
 
-    // Веб страница со статусом, например http://gimly.com/.status
+    // Веб страница со статусом, например http://gimly.dev/.status
     statusMw := &rest.StatusMiddleware{}
 
     api.Use(statusMw)
@@ -44,6 +46,9 @@ func GetImage(w rest.ResponseWriter, r *rest.Request) {
     imagick.Initialize()
     defer imagick.Terminate()
 
+    // Сюда запишем данные от горутин в виде позиция - слой
+    mapPositionMw := make(map[int]*imagick.MagickWand)
+
     // Чтение и валидация запроса
     data := models.PostData{}
     if err := r.DecodeJsonPayload(&data); err != nil {
@@ -52,7 +57,7 @@ func GetImage(w rest.ResponseWriter, r *rest.Request) {
     }
 
     // В этот канал будем отправлять искажённые слои
-    channel := make(chan *imagick.MagickWand, len(data.Layers))
+    channel := make(chan models.PositionMagicWand, len(data.Layers))
 
     // А в этот канал будем отправлять ошибки
     errors := make(chan error)
@@ -70,20 +75,36 @@ func GetImage(w rest.ResponseWriter, r *rest.Request) {
     // Чтобы на месте перемещённых пикселей была прозрачность
     image.SetImageVirtualPixelMethod(imagick.VIRTUAL_PIXEL_TRANSPARENT)
 
-    // Запустить искажение всех слоёв в отдельных потоках, результат прилетит в канал channel
+    // Запустить искажение всех слоёв в отдельных потоках, без учёта порядка, результат прилетит в канал channel
     for _, layer := range data.Layers {
         go models.DistortLayer(channel, errors, layer)
     }
 
-    // Подписываемся на оба канала, ждём данных от горутин и накладываем слои на финальное изображение
-    // TODO в каком порядке накладывать слои
+    // Подписываемся на оба канала, ждём данных от горутин и записываем их в массив в виде позиция - слой
     for range data.Layers {
         select {
-        case layer := <-channel:
-            image.CompositeImage(layer, imagick.COMPOSITE_OP_OVER, false, 0, 0) // TODO top, left
+        case pmw := <-channel:
+            mapPositionMw[pmw.Position] = pmw.MagicWand
         case err := <-errors:
             rest.Error(w, err.Error(), 500) // TODO нормальные коды ошибок
         }
+    }
+
+    // Сортируем слои по порядку https://stackoverflow.com/questions/23330781/sort-golang-map-values-by-keys
+    var keys []int
+    for k := range mapPositionMw {
+        keys = append(keys, k)
+    }
+    sort.Ints(keys)
+
+    // Накладываем слои по порядку на финальное изображение
+    for _, k := range keys {
+        image.CompositeImage(mapPositionMw[k], imagick.COMPOSITE_OP_OVER, false, 0, 0) // TODO top, left
+        image.WriteImage(fmt.Sprintf("%v.png", k))
+
+        // Без этого горутины зависнут и рест не отдаст контент, т.к. *MagickWand передаётся в канал по ссылке внутри
+        // другой структуры, и не может сам себя уничтожить.
+        mapPositionMw[k].Destroy()
     }
 
     w.Header().Set("Content-Type", "image/jpeg")

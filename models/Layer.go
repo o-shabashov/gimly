@@ -4,6 +4,7 @@ import (
     "gopkg.in/gographics/imagick.v3/imagick"
     "net/http"
     "io/ioutil"
+    "math/rand"
 )
 
 type Layer struct {
@@ -19,7 +20,7 @@ type Layer struct {
     NumbPointsSide   int64     `json:"numb_points_side"`
     OverlayPath      string    `json:"overlay_path"`
     Path             string    `json:"path"`
-    Position         int64     `json:"position"`
+    Position         int       `json:"position"`
     Top              float64   `json:"top"`
     Type             string    `json:"type"`
     Width            float64   `json:"width"`
@@ -36,7 +37,7 @@ func MaskLayer(mw *imagick.MagickWand, layer Layer) (*imagick.MagickWand, error)
     }
 
     defer response.Body.Close()
-    data,err := ioutil.ReadAll(response.Body)
+    data, err := ioutil.ReadAll(response.Body)
     if err != nil {
         return mw, err
     }
@@ -49,8 +50,9 @@ func MaskLayer(mw *imagick.MagickWand, layer Layer) (*imagick.MagickWand, error)
     return mw, err
 }
 
-func DistortLayer(channel chan *imagick.MagickWand, errors chan error, layer Layer) {
+func DistortLayer(channel chan PositionMagicWand, errors chan error, layer Layer) {
     mw := imagick.NewMagickWand()
+    pmw := PositionMagicWand{Position: rand.Intn(100)}
 
     // Получаем слой по HTTP от файлменеджера
     response, err := http.Get(layer.Path)
@@ -70,15 +72,21 @@ func DistortLayer(channel chan *imagick.MagickWand, errors chan error, layer Lay
     mw.SetImageVirtualPixelMethod(imagick.VIRTUAL_PIXEL_TRANSPARENT)
 
     // Само искажение, самая долгая операция
-    mw.DistortImage(imagick.DISTORTION_POLYNOMIAL, layer.DistortionMatrix, false)
-
-    // Накладываем маску на слой
-    mw, err = MaskLayer(mw, layer)
-    if err != nil {
-        errors <- err
-        return
+    if len(layer.DistortionMatrix) != 0 {
+        mw.DistortImage(imagick.DISTORTION_POLYNOMIAL, layer.DistortionMatrix, false)
     }
 
-    // Отдаём в канал изображение
-    channel <- mw
+    // Накладываем маску на слой
+    if layer.OverlayPath != "" {
+        mw, err = MaskLayer(mw, layer)
+        if err != nil {
+            errors <- err
+            return
+        }
+    }
+
+    pmw.MagicWand = mw
+
+    // Отдаём в канал структуры с позицией и зображением
+    channel <- pmw
 }
