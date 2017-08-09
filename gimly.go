@@ -51,7 +51,7 @@ func GetImage(w rest.ResponseWriter, r *rest.Request) {
 
     // Чтение и валидация запроса
     data := models.PostData{}
-    if err := r.DecodeJsonPayload(&data); err != nil {
+    if err := data.Validate(r); err != nil {
         rest.Error(w, err.Error(), http.StatusInternalServerError)
         return
     }
