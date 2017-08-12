@@ -73,6 +73,9 @@ func DistortLayer(channel chan PositionMagicWand, errors chan error, layer Layer
     mw.ReadImageBlob(data)
     mw.SetImageVirtualPixelMethod(imagick.VIRTUAL_PIXEL_TRANSPARENT)
 
+    // Изменяем размер
+    mw.ResizeImage(uint(layer.DesignWidth), uint(layer.DesignHeight), imagick.FILTER_CATROM)
+
     // Пересчитать матрицу
     if layer.DistortionType == DistortPolynomial {
         layer.RecalculateMatrix()
@@ -81,7 +84,7 @@ func DistortLayer(channel chan PositionMagicWand, errors chan error, layer Layer
     // Само искажение, самая долгая операция
     if len(layer.DistortionMatrix) != 0 {
         // TODO правильный тип искажения, на основе запроса
-        mw.DistortImage(imagick.DISTORTION_POLYNOMIAL, layer.DistortionMatrix, false)
+        mw.DistortImage(imagick.DISTORTION_POLYNOMIAL, layer.DistortionMatrix, true)
     }
 
     // Накладываем маску на слой
