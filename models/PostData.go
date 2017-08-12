@@ -2,13 +2,12 @@ package models
 
 import (
     "github.com/ant0ine/go-json-rest/rest"
-    "fmt"
 )
 
 type PostData struct {
     Format string   `json:"format"`
-    Width  uint     `json:"width"`
-    Height uint     `json:"height"`
+    Width  float64  `json:"width"`
+    Height float64  `json:"height"`
     Layers [] Layer `json:"layers"`
 }
 
@@ -17,20 +16,40 @@ func (p *PostData) Validate(r *rest.Request) error {
     if err := r.DecodeJsonPayload(p); err != nil {
         return err
     }
-    array := []float64{1, 2, 3, 4, 5}
-    fmt.Println(array)
 
-    for index, element := range array {
-
-        // Это X координата
-        if index%2 == 0 {
-            array[index] = array[index] * 2
-        } else {
-            // Это Y координата
-            array[index] = array[index] * 3
-        }
-        fmt.Println(index, element)
-    }
-    fmt.Println(array)
     return nil
+}
+
+func (p *PostData) ConvertPositioning() {
+    for index := range p.Layers {
+        cl := p.Layers[index]
+
+        cl.Left   = p.Width * cl.Left / 100
+        cl.Width  = p.Width * cl.Width / 100
+        cl.Top    = p.Height * cl.Top / 100
+        cl.Height = p.Height * cl.Height / 100
+
+        cl.DesignLeft   = cl.Width * cl.DesignLeft / 100
+        cl.DesignWidth  = cl.Width * cl.DesignWidth / 100
+        cl.DesignTop    = cl.Height * cl.DesignTop / 100
+        cl.DesignHeight = cl.Height * cl.DesignHeight / 100
+
+        cl.OverlayWidth  = p.Width
+        cl.OverlayHeight = p.Height
+        cl.OverlayLeft   = -cl.Height
+        cl.OverlayTop    = -cl.Top
+
+        // TODO описание
+        if len(cl.DistortionMatrix) != 0 {
+            for index := range cl.DistortionMatrix {
+                // Это X координата
+                if index%2 == 0 {
+                    cl.DistortionMatrix[index] = cl.DistortionMatrix[index] * p.Width / 100
+                } else {
+                    // Это Y координата
+                    cl.DistortionMatrix[index] = cl.DistortionMatrix[index] * p.Height / 100
+                }
+            }
+        }
+    }
 }

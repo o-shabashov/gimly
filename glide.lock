@@ -1,5 +1,5 @@
-hash: 157d479d416715d2f62df8bbbf322c153666d84a9a0366f4daef5c35f786cad2
-updated: 2017-07-31T16:44:39.095158+07:00
+hash: f3ffacf2b2de96b07b7f27f1755fb5a48ebbca9930cd4a5dff16cc5b2e92703a
+updated: 2017-08-12T14:12:02.908614057+07:00
 imports:
 - name: github.com/ant0ine/go-json-rest
   version: 731ccde05312e2c1f5578a504ea8e77d38020340
@@ -7,7 +7,7 @@ imports:
   - rest
   - rest/trie
 - name: github.com/joho/godotenv
-  version: 3ddb2792f3923947290c4932990136e17852a078
+  version: 9d9ddadf44b4c17c42bafdc530ddeee1927c067d
 - name: github.com/pkg/profile
   version: 5b67d428864e92711fcbd2f8629456121a56d91f
 - name: github.com/xeipuuv/gojsonschema

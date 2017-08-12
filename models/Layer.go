@@ -23,10 +23,16 @@ type Layer struct {
     Top              float64   `json:"top"`
     Type             string    `json:"type"`
     Width            float64   `json:"width"`
+
+    // Вообще этих полей нет в JSON схеме. Но они добавляются в процессе конвертации PostData.ConvertPositioning()
+    OverlayWidth  float64   `json:"overlay_width"`
+    OverlayHeight float64   `json:"overlay_height"`
+    OverlayTop    float64   `json:"overlay_top"`
+    OverlayLeft   float64   `json:"overlay_left"`
 }
 
-const DistortPolynomial string = "polynomial"
-const NumbCoordinatesPoint int = 4
+const DISTORT_POLYNOMIAL string = "polynomial"
+const NUMB_COORDINATES_POINT int = 4
 
 // TODO получать оверлей картинку в отдельном треде, пока идёт искажение основного слоя
 func MaskLayer(mw *imagick.MagickWand, layer Layer) (*imagick.MagickWand, error) {
@@ -73,11 +79,12 @@ func DistortLayer(channel chan PositionMagicWand, errors chan error, layer Layer
     mw.ReadImageBlob(data)
     mw.SetImageVirtualPixelMethod(imagick.VIRTUAL_PIXEL_TRANSPARENT)
 
+    // TODO вынести в отдельные методы, на основе типа слоёв
     // Изменяем размер
     mw.ResizeImage(uint(layer.DesignWidth), uint(layer.DesignHeight), imagick.FILTER_CATROM)
 
     // Пересчитать матрицу
-    if layer.DistortionType == DistortPolynomial {
+    if layer.DistortionType == DISTORT_POLYNOMIAL {
         layer.RecalculateMatrix()
     }
 
@@ -105,7 +112,7 @@ func DistortLayer(channel chan PositionMagicWand, errors chan error, layer Layer
 func (l *Layer) RecalculateMatrix() {
 
     if l.DistortionOrder == 0 {
-        numbPoints := len(l.DistortionMatrix) / NumbCoordinatesPoint
+        numbPoints := len(l.DistortionMatrix) / NUMB_COORDINATES_POINT
 
         if l.NumbPointsSide == 0 || l.NumbPointsSide == 2 {
             l.DistortionOrder = 1.5

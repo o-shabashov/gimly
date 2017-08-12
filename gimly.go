@@ -56,6 +56,9 @@ func GetImage(w rest.ResponseWriter, r *rest.Request) {
         return
     }
 
+    // Перевод процентного позиционирования в пиксельное TODO ошибки
+    data.ConvertPositioning()
+
     // В этот канал будем отправлять искажённые слои
     channel := make(chan models.PositionMagicWand, len(data.Layers))
 
@@ -69,7 +72,7 @@ func GetImage(w rest.ResponseWriter, r *rest.Request) {
     pw := imagick.NewPixelWand()
     pw.SetColor("none")
 
-    image.NewImage(data.Height, data.Width, pw)
+    image.NewImage(uint(data.Height), uint(data.Width), pw)
     image.SetImageFormat(data.Format)
 
     // Чтобы на месте перемещённых пикселей была прозрачность
