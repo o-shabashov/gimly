@@ -83,11 +83,6 @@ func DistortLayer(channel chan PositionMagicWand, errors chan error, layer Layer
     // Изменяем размер
     mw.ResizeImage(uint(layer.DesignWidth), uint(layer.DesignHeight), imagick.FILTER_CATROM)
 
-    // Пересчитать матрицу
-    if layer.DistortionType == DISTORT_POLYNOMIAL {
-        layer.RecalculateMatrix()
-    }
-
     // Само искажение, самая долгая операция
     if len(layer.DistortionMatrix) != 0 {
         // TODO правильный тип искажения, на основе запроса
