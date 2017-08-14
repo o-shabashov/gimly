@@ -7,6 +7,7 @@ import (
 )
 
 type Layer struct {
+    BackgroundColor  string    `json:"background_color"`
     DesignHeight     float64   `json:"design_height"`
     DesignLeft       float64   `json:"design_left"`
     DesignTop        float64   `json:"design_top"`
@@ -53,14 +54,30 @@ func MaskLayer(mw *imagick.MagickWand, layer Layer) (*imagick.MagickWand, error)
     overlay.ReadImageBlob(data)
     overlay.SetImageVirtualPixelMethod(imagick.VIRTUAL_PIXEL_TRANSPARENT)
 
-    mw.CompositeImage(overlay, imagick.COMPOSITE_OP_OVER, false, int(layer.Left), int(layer.Top))
+    mw.ScaleImage(uint(layer.OverlayWidth), uint(layer.OverlayHeight))
+    mw.CompositeImage(overlay, imagick.COMPOSITE_OP_DST_OUT, false, int(layer.OverlayTop), int(layer.OverlayLeft))
 
     return mw, err
 }
 
-func DistortLayer(channel chan PositionMagicWand, errors chan error, layer Layer) {
+func Build(channel chan PositionMagicWand, errors chan error, layer Layer) {
+    // Основное изображение, на него будем наносить все данные
     mw := imagick.NewMagickWand()
-    pmw := PositionMagicWand{Position: layer.Position}
+    mw.SetSize(uint(layer.DesignWidth), uint(layer.DesignHeight))
+
+    // Бэкграунд изображение
+    bmw := imagick.NewMagickWand()
+    pw := imagick.NewPixelWand()
+
+    if layer.BackgroundColor != "" {
+        pw.SetColor(layer.BackgroundColor)
+    } else {
+        pw.SetColor("none")
+    }
+
+    bmw.NewImage(uint(layer.DesignWidth), uint(layer.DesignHeight), pw)
+
+    pmw := PositionMagicWand{Layer: layer}
 
     // Получаем слой по HTTP от файлменеджера
     response, err := http.Get(layer.Path)
@@ -100,6 +117,6 @@ func DistortLayer(channel chan PositionMagicWand, errors chan error, layer Layer
 
     pmw.MagicWand = mw
 
-    // Отдаём в канал структуры с позицией и зображением
+    // Отдаём в канал структуры с позицией и изображением
     channel <- pmw
 }

@@ -47,7 +47,7 @@ func GetImage(w rest.ResponseWriter, r *rest.Request) {
     defer imagick.Terminate()
 
     // Сюда запишем данные от горутин в виде позиция - слой
-    mapPositionMw := make(map[int]*imagick.MagickWand)
+    mapPositionMw := make(map[int]models.PositionMagicWand)
 
     // Чтение и валидация запроса
     data := models.PostData{}
@@ -78,16 +78,16 @@ func GetImage(w rest.ResponseWriter, r *rest.Request) {
     // Чтобы на месте перемещённых пикселей была прозрачность
     image.SetImageVirtualPixelMethod(imagick.VIRTUAL_PIXEL_TRANSPARENT)
 
-    // Запустить искажение всех слоёв в отдельных потоках, без учёта порядка, результат прилетит в канал channel
+    // Запустить обработку всех слоёв в отдельных потоках, без учёта порядка, результат прилетит в канал channel
     for _, layer := range data.Layers {
-        go models.DistortLayer(channel, errors, layer)
+        go models.Build(channel, errors, layer)
     }
 
     // Подписываемся на оба канала, ждём данных от горутин и записываем их в массив в виде позиция - слой
     for range data.Layers {
         select {
         case pmw := <-channel:
-            mapPositionMw[pmw.Position] = pmw.MagicWand
+            mapPositionMw[pmw.Layer.Position] = pmw
         case err := <-errors:
             rest.Error(w, err.Error(), 500) // TODO нормальные коды ошибок
         }
@@ -102,12 +102,18 @@ func GetImage(w rest.ResponseWriter, r *rest.Request) {
 
     // Накладываем слои по порядку на финальное изображение
     for _, k := range keys {
-        image.CompositeImage(mapPositionMw[k], imagick.COMPOSITE_OP_OVER, false, 0, 0) // TODO top, left
+        image.CompositeImage(
+            mapPositionMw[k].MagicWand,
+            imagick.COMPOSITE_OP_OVER,
+            false,
+            int(mapPositionMw[k].Layer.Left),
+            int(mapPositionMw[k].Layer.Top),
+        )
         image.WriteImage(fmt.Sprintf("%v.png", k))
 
         // Без этого горутины зависнут и рест не отдаст контент, т.к. *MagickWand передаётся в канал по ссылке внутри
         // другой структуры, и не может сам себя уничтожить.
-        mapPositionMw[k].Destroy()
+        mapPositionMw[k].MagicWand.Destroy()
     }
 
     w.Header().Set("Content-Type", "image/jpeg")

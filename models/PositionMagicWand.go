@@ -2,8 +2,10 @@ package models
 
 import "gopkg.in/gographics/imagick.v3/imagick"
 
-// Эта структура будет хранить искаженный слой и его порядок, для пердачи по каналу из горутины в основной трэд
-type PositionMagicWand struct{
-    Position  int
+// Эта структура будет хранить объект с искаженным слоем (*imagick.MagickWand) и оригинальный слой (models.layer).
+// Это нужно для передачи в основной тред информации о позиции и координатах смещения оригинального слоя.
+// И чтобы не выдумывать новые аттрибуты, было решено для упрощения передавать весь объект models.Layer.
+type PositionMagicWand struct {
+    Layer     Layer
     MagicWand *imagick.MagickWand
 }
