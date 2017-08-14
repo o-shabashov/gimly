@@ -54,9 +54,22 @@ func (p *PostData) ConvertPositioning() {
             }
         }
 
-        // Пересчитать матрицу для полиномиального искажения
-        if p.Layers[i].DistortionType == DISTORT_POLYNOMIAL {
-            p.Layers[i].RecalculateMatrix()
+        // Пересчитать матрицу для полиномиального искажения. В начало массива искажений добавляется коэффициент
+        // искажений, зависящий от количества точек на стороне.
+        if p.Layers[i].DistortionType == DISTORT_POLYNOMIAL && p.Layers[i].DistortionOrder == 0 {
+            numbPoints := len(p.Layers[i].DistortionMatrix) / NUMB_COORDINATES_POINT
+
+            if p.Layers[i].NumbPointsSide == 0 || p.Layers[i].NumbPointsSide == 2 {
+                p.Layers[i].DistortionOrder = 1.5
+            } else if p.Layers[i].NumbPointsSide == 3 && numbPoints <= 15 {
+                p.Layers[i].DistortionOrder = 2
+            } else if p.Layers[i].NumbPointsSide == 3 && numbPoints > 15 || p.Layers[i].NumbPointsSide == 4 {
+                p.Layers[i].DistortionOrder = 3
+            } else {
+                p.Layers[i].DistortionOrder = 4
+            }
+
+            p.Layers[i].DistortionMatrix = append([]float64{p.Layers[i].DistortionOrder}, p.Layers[i].DistortionMatrix...)
         }
     }
 }

@@ -103,22 +103,3 @@ func DistortLayer(channel chan PositionMagicWand, errors chan error, layer Layer
     // Отдаём в канал структуры с позицией и зображением
     channel <- pmw
 }
-
-func (l *Layer) RecalculateMatrix() {
-
-    if l.DistortionOrder == 0 {
-        numbPoints := len(l.DistortionMatrix) / NUMB_COORDINATES_POINT
-
-        if l.NumbPointsSide == 0 || l.NumbPointsSide == 2 {
-            l.DistortionOrder = 1.5
-        } else if l.NumbPointsSide == 3 && numbPoints <= 15 {
-            l.DistortionOrder = 2
-        } else if l.NumbPointsSide == 3 && numbPoints > 15 || l.NumbPointsSide == 4 {
-            l.DistortionOrder = 3
-        } else {
-            l.DistortionOrder = 4
-        }
-
-        l.DistortionMatrix = append([]float64{l.DistortionOrder}, l.DistortionMatrix...)
-    }
-}
