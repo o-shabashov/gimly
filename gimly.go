@@ -4,7 +4,7 @@ import (
     "gimly/models"
     "net/http"
     "log"
-    "gopkg.in/gographics/imagick.v3/imagick"
+    "gopkg.in/gographics/imagick.v2/imagick"
     "github.com/ant0ine/go-json-rest/rest"
     "github.com/joho/godotenv"
     "os"
@@ -102,10 +102,11 @@ func GetImage(w rest.ResponseWriter, r *rest.Request) {
 
     // Накладываем слои по порядку на финальное изображение
     for _, k := range keys {
+        mw := imagick.NewMagickWand()
+        mw.ReadImageBlob(mapPositionMw[k].ImageDataBytes)
         image.CompositeImage(
-            mapPositionMw[k].MagicWand,
+            mw,
             imagick.COMPOSITE_OP_OVER,
-            false,
             int(mapPositionMw[k].Layer.Left),
             int(mapPositionMw[k].Layer.Top),
         )
@@ -113,9 +114,10 @@ func GetImage(w rest.ResponseWriter, r *rest.Request) {
 
         // Без этого горутины зависнут и рест не отдаст контент, т.к. *MagickWand передаётся в канал по ссылке внутри
         // другой структуры, и не может сам себя уничтожить.
-        mapPositionMw[k].MagicWand.Destroy()
+        mw.Destroy()
     }
 
     w.Header().Set("Content-Type", "image/jpeg")
     w.(http.ResponseWriter).Write(image.GetImageBlob())
+    image.Destroy()
 }

@@ -1,5 +1,5 @@
-hash: f3ffacf2b2de96b07b7f27f1755fb5a48ebbca9930cd4a5dff16cc5b2e92703a
-updated: 2017-08-12T14:12:02.908614057+07:00
+hash: 9f0388b1c65ac60aa7ccfe492878b1ddba4812772a83002d2380b93e0520083d
+updated: 2017-08-15T14:00:57.677056143+07:00
 imports:
 - name: github.com/ant0ine/go-json-rest
   version: 731ccde05312e2c1f5578a504ea8e77d38020340
@@ -12,8 +12,8 @@ imports:
   version: 5b67d428864e92711fcbd2f8629456121a56d91f
 - name: github.com/xeipuuv/gojsonschema
   version: 0c8571ac0ce161a5feb57375a9cdf148c98c0f70
-- name: gopkg.in/gographics/imagick.v3
-  version: a6d52db195b160b6340e212c8638eb692bdd249a
+- name: gopkg.in/gographics/imagick.v2
+  version: 8258522f85241f2e3d830b07c5fef6865cc16414
   subpackages:
   - imagick
   - imagick/types

@@ -1,35 +1,37 @@
 package models
 
 import (
-    "gopkg.in/gographics/imagick.v3/imagick"
+    "gopkg.in/gographics/imagick.v2/imagick"
     "net/http"
     "io/ioutil"
+    "fmt"
 )
 
 type Layer struct {
-    BackgroundColor  string    `json:"background_color"`
-    DesignHeight     float64   `json:"design_height"`
-    DesignLeft       float64   `json:"design_left"`
-    DesignTop        float64   `json:"design_top"`
-    DesignWidth      float64   `json:"design_width"`
-    DistortionMatrix []float64 `json:"distortion_matrix"`
-    DistortionOrder  float64   `json:"distortion_order"`
-    DistortionType   string    `json:"distortion_type"`
-    Height           float64   `json:"height"`
-    Left             float64   `json:"left"`
-    NumbPointsSide   int64     `json:"numb_points_side"`
-    OverlayPath      string    `json:"overlay_path"`
-    Path             string    `json:"path"`
-    Position         int       `json:"position"`
     Top              float64   `json:"top"`
+    Left             float64   `json:"left"`
     Type             string    `json:"type"`
     Width            float64   `json:"width"`
+    Height           float64   `json:"height"`
+    Position         int       `json:"position"`
+    DesignTop        float64   `json:"design_top"`
+    DesignLeft       float64   `json:"design_left"`
+    DesignWidth      float64   `json:"design_width"`
+    DesignHeight     float64   `json:"design_height"`
+    DistortionType   string    `json:"distortion_type"`
+    DistortionOrder  float64   `json:"distortion_order"`
+    NumbPointsSide   int64     `json:"numb_points_side"`
+    DistortionMatrix []float64 `json:"distortion_matrix"`
+    OverlayPath      string    `json:"overlay_path"`
+    Path             string    `json:"path"`
 
     // Вообще этих полей нет в JSON схеме. Но они добавляются в процессе конвертации PostData.ConvertPositioning()
     OverlayWidth  float64   `json:"overlay_width"`
     OverlayHeight float64   `json:"overlay_height"`
-    OverlayTop    float64   `json:"overlay_top"`
     OverlayLeft   float64   `json:"overlay_left"`
+    OverlayTop    float64   `json:"overlay_top"`
+
+    BackgroundColor  string    `json:"background_color"`
 }
 
 const DISTORT_POLYNOMIAL string = "polynomial"
@@ -54,9 +56,13 @@ func MaskLayer(mw *imagick.MagickWand, layer Layer) (*imagick.MagickWand, error)
     overlay.ReadImageBlob(data)
     overlay.SetImageVirtualPixelMethod(imagick.VIRTUAL_PIXEL_TRANSPARENT)
 
-    mw.ScaleImage(uint(layer.OverlayWidth), uint(layer.OverlayHeight))
-    mw.CompositeImage(overlay, imagick.COMPOSITE_OP_DST_OUT, false, int(layer.OverlayTop), int(layer.OverlayLeft))
+    if layer.OverlayWidth != 0 && layer.OverlayHeight != 0 {
+        overlay.ScaleImage(uint(layer.OverlayWidth), uint(layer.OverlayHeight))
+    }
 
+    mw.CompositeImage(overlay, imagick.COMPOSITE_OP_DST_OUT, int(layer.OverlayLeft), int(layer.OverlayTop))
+
+    mw.WriteImage(fmt.Sprintf("masked_%v.png", layer.Position))
     return mw, err
 }
 
@@ -70,12 +76,13 @@ func Build(channel chan PositionMagicWand, errors chan error, layer Layer) {
     pw := imagick.NewPixelWand()
 
     if layer.BackgroundColor != "" {
-        pw.SetColor(layer.BackgroundColor)
+        pw.SetColor("#" + layer.BackgroundColor)
     } else {
         pw.SetColor("none")
     }
 
     bmw.NewImage(uint(layer.DesignWidth), uint(layer.DesignHeight), pw)
+    mw.CompositeImage(bmw, imagick.COMPOSITE_OP_OVER, int(layer.Left), int(layer.Top))
 
     pmw := PositionMagicWand{Layer: layer}
 
@@ -96,14 +103,15 @@ func Build(channel chan PositionMagicWand, errors chan error, layer Layer) {
     mw.ReadImageBlob(data)
     mw.SetImageVirtualPixelMethod(imagick.VIRTUAL_PIXEL_TRANSPARENT)
 
-    // TODO вынести в отдельные методы, на основе типа слоёв
+    // TODO вынести в отдельные методы, на основе типа слоёв, ресайз основного слоя
     // Изменяем размер
-    mw.ResizeImage(uint(layer.DesignWidth), uint(layer.DesignHeight), imagick.FILTER_CATROM)
+    mw.ResizeImage(uint(layer.DesignWidth), uint(layer.DesignHeight), imagick.FILTER_CATROM, 1)
 
     // Само искажение, самая долгая операция
     if len(layer.DistortionMatrix) != 0 {
         // TODO правильный тип искажения, на основе запроса
-        mw.DistortImage(imagick.DISTORTION_POLYNOMIAL, layer.DistortionMatrix, true)
+        mw.DistortImage(imagick.DISTORTION_POLYNOMIAL, layer.DistortionMatrix, false)
+        mw.WriteImage(fmt.Sprintf("distorted_%v.png", layer.Position))
     }
 
     // Накладываем маску на слой
@@ -115,7 +123,8 @@ func Build(channel chan PositionMagicWand, errors chan error, layer Layer) {
         }
     }
 
-    pmw.MagicWand = mw
+    pmw.ImageDataBytes = mw.GetImageBlob()
+    mw.Destroy()
 
     // Отдаём в канал структуры с позицией и изображением
     channel <- pmw

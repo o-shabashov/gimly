@@ -2,6 +2,8 @@ package models
 
 import (
     "github.com/ant0ine/go-json-rest/rest"
+    "io/ioutil"
+    "encoding/json"
 )
 
 type PostData struct {
@@ -35,7 +37,7 @@ func (p *PostData) ConvertPositioning() {
 
         p.Layers[i].OverlayWidth  = p.Width
         p.Layers[i].OverlayHeight = p.Height
-        p.Layers[i].OverlayLeft   = -p.Layers[i].Height
+        p.Layers[i].OverlayLeft   = -p.Layers[i].Left
         p.Layers[i].OverlayTop    = -p.Layers[i].Top
 
         // Матрица искажений имеет вид массива парных координат - [X координата, Y координата, X, Y,...]
@@ -46,30 +48,35 @@ func (p *PostData) ConvertPositioning() {
             for j := range p.Layers[i].DistortionMatrix {
                 if j%2 == 0 {
                     // Это X координата
-                    p.Layers[i].DistortionMatrix[j] = p.Layers[i].DistortionMatrix[j] * p.Width / 100
+                    p.Layers[i].DistortionMatrix[j] = p.Layers[i].DistortionMatrix[j] * p.Layers[i].Width / 100
                 } else {
                     // Это Y координата
-                    p.Layers[i].DistortionMatrix[j] = p.Layers[i].DistortionMatrix[j] * p.Height / 100
+                    p.Layers[i].DistortionMatrix[j] = p.Layers[i].DistortionMatrix[j] * p.Layers[i].Height / 100
                 }
             }
         }
 
         // Пересчитать матрицу для полиномиального искажения. В начало массива искажений добавляется коэффициент
         // искажений, зависящий от количества точек на стороне.
-        if p.Layers[i].DistortionType == DISTORT_POLYNOMIAL && p.Layers[i].DistortionOrder == 0 {
-            numbPoints := len(p.Layers[i].DistortionMatrix) / NUMB_COORDINATES_POINT
+        if p.Layers[i].DistortionType == DISTORT_POLYNOMIAL {
 
-            if p.Layers[i].NumbPointsSide == 0 || p.Layers[i].NumbPointsSide == 2 {
-                p.Layers[i].DistortionOrder = 1.5
-            } else if p.Layers[i].NumbPointsSide == 3 && numbPoints <= 15 {
-                p.Layers[i].DistortionOrder = 2
-            } else if p.Layers[i].NumbPointsSide == 3 && numbPoints > 15 || p.Layers[i].NumbPointsSide == 4 {
-                p.Layers[i].DistortionOrder = 3
-            } else {
-                p.Layers[i].DistortionOrder = 4
+            if  p.Layers[i].DistortionOrder == 0 {
+                numbPoints := len(p.Layers[i].DistortionMatrix) / NUMB_COORDINATES_POINT
+
+                if p.Layers[i].NumbPointsSide == 0 || p.Layers[i].NumbPointsSide == 2 {
+                    p.Layers[i].DistortionOrder = 1.5
+                } else if p.Layers[i].NumbPointsSide == 3 && numbPoints <= 15 {
+                    p.Layers[i].DistortionOrder = 2
+                } else if p.Layers[i].NumbPointsSide == 3 && numbPoints > 15 || p.Layers[i].NumbPointsSide == 4 {
+                    p.Layers[i].DistortionOrder = 3
+                } else {
+                    p.Layers[i].DistortionOrder = 4
+                }
             }
 
             p.Layers[i].DistortionMatrix = append([]float64{p.Layers[i].DistortionOrder}, p.Layers[i].DistortionMatrix...)
         }
     }
+    d, _ := json.Marshal(p)
+    ioutil.WriteFile("Converted config WO matrix.json", []byte(d), 0644)
 }
