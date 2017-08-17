@@ -1,7 +1,6 @@
 package main
 
 import (
-    "gimly/models"
     "net/http"
     "log"
     "gopkg.in/gographics/imagick.v2/imagick"
@@ -9,6 +8,7 @@ import (
     "github.com/joho/godotenv"
     "os"
     "sort"
+    "gimly/models"
 )
 
 func main() {
@@ -79,7 +79,7 @@ func GetImage(w rest.ResponseWriter, r *rest.Request) {
 
     // Запустить обработку всех слоёв в отдельных потоках, без учёта порядка, результат прилетит в канал channel
     for _, layer := range postData.Layers {
-        go models.Build(channel, errors, layer)
+        go layer.Build(channel, errors)
     }
 
     // Подписываемся на оба канала, ждём данных от горутин и записываем их в массив в виде позиция - слой
@@ -113,7 +113,7 @@ func GetImage(w rest.ResponseWriter, r *rest.Request) {
         mapPositionMw[k].MagicWand.Destroy()
     }
 
-    w.Header().Set("Content-Type", "image/" + postData.Format)
+    w.Header().Set("Content-Type", "image/"+postData.Format)
     w.(http.ResponseWriter).Write(image.GetImageBlob())
 
     // Освобождаем память, нам ведь не нужны утечки?
