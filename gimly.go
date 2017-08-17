@@ -9,7 +9,6 @@ import (
     "github.com/joho/godotenv"
     "os"
     "sort"
-    "fmt"
 )
 
 func main() {
@@ -50,17 +49,17 @@ func GetImage(w rest.ResponseWriter, r *rest.Request) {
     mapPositionMw := make(map[int]models.PositionMagicWand)
 
     // Чтение и валидация запроса
-    data := models.PostData{}
-    if err := data.Validate(r); err != nil {
+    postData := models.PostData{}
+    if err := postData.Validate(r); err != nil {
         rest.Error(w, err.Error(), http.StatusInternalServerError)
         return
     }
 
     // Перевод процентного позиционирования в пиксельное TODO ошибки
-    data.ConvertPositioning()
+    postData.ConvertPositioning()
 
     // В этот канал будем отправлять искажённые слои
-    channel := make(chan models.PositionMagicWand, len(data.Layers))
+    channel := make(chan models.PositionMagicWand, len(postData.Layers))
 
     // А в этот канал будем отправлять ошибки
     errors := make(chan error)
@@ -72,19 +71,19 @@ func GetImage(w rest.ResponseWriter, r *rest.Request) {
     pw := imagick.NewPixelWand()
     pw.SetColor("none")
 
-    image.NewImage(uint(data.Height), uint(data.Width), pw)
-    image.SetImageFormat(data.Format)
+    image.NewImage(uint(postData.Height), uint(postData.Width), pw)
+    image.SetImageFormat(postData.Format)
 
     // Чтобы на месте перемещённых пикселей была прозрачность
     image.SetImageVirtualPixelMethod(imagick.VIRTUAL_PIXEL_TRANSPARENT)
 
     // Запустить обработку всех слоёв в отдельных потоках, без учёта порядка, результат прилетит в канал channel
-    for _, layer := range data.Layers {
+    for _, layer := range postData.Layers {
         go models.Build(channel, errors, layer)
     }
 
     // Подписываемся на оба канала, ждём данных от горутин и записываем их в массив в виде позиция - слой
-    for range data.Layers {
+    for range postData.Layers {
         select {
         case pmw := <-channel:
             mapPositionMw[pmw.Layer.Position] = pmw
@@ -102,22 +101,21 @@ func GetImage(w rest.ResponseWriter, r *rest.Request) {
 
     // Накладываем слои по порядку на финальное изображение
     for _, k := range keys {
-        mw := imagick.NewMagickWand()
-        mw.ReadImageBlob(mapPositionMw[k].ImageDataBytes)
         image.CompositeImage(
-            mw,
+            mapPositionMw[k].MagicWand,
             imagick.COMPOSITE_OP_OVER,
             int(mapPositionMw[k].Layer.Left),
             int(mapPositionMw[k].Layer.Top),
         )
-        image.WriteImage(fmt.Sprintf("%v.png", k))
 
         // Без этого горутины зависнут и рест не отдаст контент, т.к. *MagickWand передаётся в канал по ссылке внутри
         // другой структуры, и не может сам себя уничтожить.
-        mw.Destroy()
+        mapPositionMw[k].MagicWand.Destroy()
     }
 
-    w.Header().Set("Content-Type", "image/jpeg")
+    w.Header().Set("Content-Type", "image/" + postData.Format)
     w.(http.ResponseWriter).Write(image.GetImageBlob())
+
+    // Освобождаем память, нам ведь не нужны утечки?
     image.Destroy()
 }

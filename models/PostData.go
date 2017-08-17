@@ -2,8 +2,6 @@ package models
 
 import (
     "github.com/ant0ine/go-json-rest/rest"
-    "io/ioutil"
-    "encoding/json"
 )
 
 type PostData struct {
@@ -77,6 +75,4 @@ func (p *PostData) ConvertPositioning() {
             p.Layers[i].DistortionMatrix = append([]float64{p.Layers[i].DistortionOrder}, p.Layers[i].DistortionMatrix...)
         }
     }
-    d, _ := json.Marshal(p)
-    ioutil.WriteFile("Converted config WO matrix.json", []byte(d), 0644)
 }
