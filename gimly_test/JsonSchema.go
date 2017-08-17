@@ -1,3 +1,6 @@
+package gimly_test
+
+const JsonSchema = `
 {
   "title": "Generator config",
   "type": "object",
@@ -76,7 +79,7 @@
           ]
         },
         "distortion_matrix": {
-          "type": "string"
+          "type": "array"
         },
         "distortion_order": {
           "enum": [
@@ -138,3 +141,4 @@
     }
   }
 }
+`
