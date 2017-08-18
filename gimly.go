@@ -101,7 +101,7 @@ func GetImage(w rest.ResponseWriter, r *rest.Request) {
 
     // Накладываем слои по порядку на финальное изображение
     for _, k := range keys {
-        image.CompositeImage(
+        err := image.CompositeImage(
             mapPositionMw[k].MagicWand,
             imagick.COMPOSITE_OP_OVER,
             int(mapPositionMw[k].Layer.Left),
@@ -111,6 +111,10 @@ func GetImage(w rest.ResponseWriter, r *rest.Request) {
         // Без этого горутины зависнут и рест не отдаст контент, т.к. *MagickWand передаётся в канал по ссылке внутри
         // другой структуры, и не может сам себя уничтожить.
         mapPositionMw[k].MagicWand.Destroy()
+
+        if err != nil {
+            rest.Error(w, err.Error(), 500)
+        }
     }
 
     w.Header().Set("Content-Type", "image/"+postData.Format)

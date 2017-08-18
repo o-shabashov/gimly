@@ -19,7 +19,7 @@ func ProcessOverlay(layer Layer, baseImage *imagick.MagickWand, ) (*imagick.Magi
         overlay.ScaleImage(uint(layer.OverlayWidth), uint(layer.OverlayHeight))
     }
 
-    baseImage.CompositeImage(overlay, imagick.COMPOSITE_OP_DST_OUT, int(layer.OverlayLeft), int(layer.OverlayTop))
+    err = baseImage.CompositeImage(overlay, imagick.COMPOSITE_OP_DST_OUT, int(layer.OverlayLeft), int(layer.OverlayTop))
 
     return baseImage, err
 }
