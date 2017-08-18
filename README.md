@@ -2,10 +2,14 @@
 
 Сделан потому что PHP Imagick::distort сосёт в распаралеливании. Потенциально Гимли это замена генератору, потому что быстро и все хотят ВЖУХ! и картинка появилась на главной.
 
+## Алгоритм работы
+
+[Sketchboard](https://sketchboard.me/nACNMWo6XpyJ#/), нажать `ALT` + `P`
+
 # Зависимости
 
 * ImageMagick 6-ой версии. Потенциально можно и на 7, но нужно тогда подключить `gopkg.in/gographics/imagick.v3/imagick` а не `v2` и немного изменить код.
-* [Glide](https://glide.sh/)
+* [Glide](https://glide.sh)
 
 # Установка
 
@@ -16,9 +20,15 @@ glide install
 
 # Запуск
 
+Отредактируйте `.env` файл по своему усмотрению.
+
 ```shell
 go run gimly.go
 ```
+
+Гимли будет доступен по адресу [http://localhost:8901](http://localhost:8901)
+
+[![Run in Postman](https://run.pstmn.io/button.svg)](https://app.getpostman.com/run-collection/bb1096a9a186da5214c5)
 
 # Важно
 
@@ -36,9 +46,16 @@ $GOPATH/bin/goconvey
 
 Тесты написаны с помощью [GoConvey](http://goconvey.co)
 
-# Документация
+# Документация используемых библиотек
 
-* https://github.com/gographics/imagick
+* [Менеджер зависимостей Glide](https://glide.sh)
+* [Биндинг ImageMagick в Go](https://github.com/gographics/imagick)
+* [RESTful JSON API сервис](https://github.com/ant0ine/go-json-rest)
+* [Чтение .env файлов](github.com/joho/godotenv)
+* [BDD фреймворк тестирования GoConvey](http://goconvey.co)
+
+### Опционально
+* [Live reload utility for Go web servers](https://github.com/codegangsta/gin)
 
 # TODO
 
@@ -48,7 +65,7 @@ $GOPATH/bin/goconvey
 * [ ] Докер контейнер
 * [x] Тесты
 * [x] Разобраться с Glide, почему-то не устанавливает зависимости, пришлось юзать go get
-* [ ] Postman коллекция, лучше после тестов
+* [x] Postman коллекция, лучше после тестов
 * [ ] Объявить об изменении JSON схемы: матрица искажений должна быть массивом, а не строкой, distortion_order стал интом
 * [ ] Нормальные коды ошибок, а не просто 500 на всё
 * [x] Смещение слоёв относительно финального изображение
