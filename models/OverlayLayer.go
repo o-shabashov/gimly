@@ -4,7 +4,7 @@ import (
     "gopkg.in/gographics/imagick.v2/imagick"
 )
 
-func ProcessOverlay(baseImage *imagick.MagickWand, layer Layer) (*imagick.MagickWand, error) {
+func ProcessOverlay(layer Layer, baseImage *imagick.MagickWand, ) (*imagick.MagickWand, error) {
     overlay := imagick.NewMagickWand()
 
     data, err := GetImageBlob(layer.OverlayPath)

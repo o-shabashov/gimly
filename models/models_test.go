@@ -20,6 +20,11 @@ func TestPostDataStruct(t *testing.T) {
         result, err := gojsonschema.Validate(schemaLoader, documentLoader)
 
         So(err, ShouldBeNil)
+
+        if result.Valid() != true {
+            Println(result.Errors())
+        }
+
         So(result.Valid(), ShouldBeTrue)
     })
 
@@ -40,7 +45,7 @@ func TestPostDataStruct(t *testing.T) {
 
 }
 
-func TestLayer(t *testing.T) {
+func TestLayersProcess(t *testing.T) {
     imagick.Initialize()
     defer imagick.Terminate()
 
@@ -86,5 +91,74 @@ func TestLayer(t *testing.T) {
 
         So(result, ShouldHaveSameTypeAs, baseImage)
         So(result.GetImageBlob(), ShouldHaveSameTypeAs, []byte{})
+    })
+
+    Convey("Process overlay layer", t, func() {
+        baseImage := imagick.NewMagickWand()
+        pw := imagick.NewPixelWand()
+        pw.SetColor("none")
+
+        layer := Layer{}
+        err := json.Unmarshal([]byte(gimly_test.OverlayLayer), &layer)
+        So(err, ShouldBeNil)
+
+        baseImage.NewImage(uint(layer.DesignWidth), uint(layer.DesignHeight), pw)
+
+        result, err := ProcessOverlay(layer, baseImage)
+        So(err, ShouldBeNil)
+
+        So(result, ShouldHaveSameTypeAs, baseImage)
+        So(result.GetImageBlob(), ShouldHaveSameTypeAs, []byte{})
+    })
+
+    Convey("Process distortion by main layer", t, func() {
+        baseImage := imagick.NewMagickWand()
+        pw := imagick.NewPixelWand()
+        pw.SetColor("none")
+
+        layer := Layer{}
+        err := json.Unmarshal([]byte(gimly_test.MainLayer), &layer)
+        So(err, ShouldBeNil)
+
+        baseImage.NewImage(uint(layer.DesignWidth), uint(layer.DesignHeight), pw)
+
+        result, err := ProcessDistort(layer, baseImage)
+        So(err, ShouldBeNil)
+
+        So(result, ShouldHaveSameTypeAs, baseImage)
+        So(result.GetImageBlob(), ShouldHaveSameTypeAs, []byte{})
+    })
+
+    Convey("Main Layer.Build() method should work fine", t, func() {
+        p := PostData{}
+        err := json.Unmarshal([]byte(gimly_test.Request), &p)
+        So(err, ShouldBeNil)
+
+        p.ConvertPositioning()
+
+        baseImage := imagick.NewMagickWand()
+        pw := imagick.NewPixelWand()
+        pw.SetColor("none")
+
+        layer := Layer{}
+        err = json.Unmarshal([]byte(gimly_test.BuildLayer), &layer)
+        So(err, ShouldBeNil)
+
+        baseImage.NewImage(uint(layer.DesignWidth), uint(layer.DesignHeight), pw)
+
+        mapPositionMw := make(map[int]PositionMagicWand)
+        channel := make(chan PositionMagicWand, 1)
+        errors := make(chan error)
+
+        go layer.Build(channel, errors)
+        select {
+        case pmw := <-channel:
+            mapPositionMw[pmw.Layer.Position] = pmw
+        case err := <-errors:
+            Println(err.Error())
+        }
+
+        So(err, ShouldBeNil)
+        So(mapPositionMw[0], ShouldHaveSameTypeAs, PositionMagicWand{})
     })
 }

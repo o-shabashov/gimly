@@ -76,7 +76,7 @@ func (layer Layer) Build(channel chan PositionMagicWand, errors chan error) {
 
     // Накладываем слой наложения
     if layer.OverlayPath != "" {
-        baseImage, err = ProcessOverlay(baseImage, layer)
+        baseImage, err = ProcessOverlay(layer, baseImage)
         if err != nil {
             errors <- err
             return
