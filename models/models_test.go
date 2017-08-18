@@ -1,9 +1,8 @@
-package main
+package models
 
 import (
     "testing"
     . "github.com/smartystreets/goconvey/convey"
-    "gimly/models"
     "github.com/xeipuuv/gojsonschema"
     "encoding/json"
     "gopkg.in/gographics/imagick.v2/imagick"
@@ -25,13 +24,13 @@ func TestPostDataStruct(t *testing.T) {
     })
 
     Convey("Created PostData struct equal JSON", t, func() {
-        p := models.PostData{}
+        p := PostData{}
         err := json.Unmarshal([]byte(gimly_test.Request), &p)
         So(err, ShouldBeNil)
 
         Convey("Converting layer coordinates", func() {
             p.ConvertPositioning()
-            cpd := models.PostData{}
+            cpd := PostData{}
             err := json.Unmarshal([]byte(gimly_test.ConvertedPostData), &cpd)
 
             So(err, ShouldBeNil)
@@ -46,7 +45,7 @@ func TestLayer(t *testing.T) {
     defer imagick.Terminate()
 
     Convey("Get image blob by HTTP", t, func() {
-        data, err := models.GetImageBlob(testDesignURL)
+        data, err := GetImageBlob(testDesignURL)
 
         So(err, ShouldBeNil)
         So(data, ShouldHaveSameTypeAs, []byte{})
@@ -58,13 +57,13 @@ func TestLayer(t *testing.T) {
         pw := imagick.NewPixelWand()
         pw.SetColor("none")
 
-        layer := models.Layer{}
+        layer := Layer{}
         err := json.Unmarshal([]byte(gimly_test.BackgroundLayer), &layer)
         So(err, ShouldBeNil)
 
         baseImage.NewImage(uint(layer.DesignWidth), uint(layer.DesignHeight), pw)
 
-        result, err := models.ProcessBackground(layer, baseImage)
+        result, err := ProcessBackground(layer, baseImage)
         So(err, ShouldBeNil)
 
         So(result, ShouldHaveSameTypeAs, baseImage)
@@ -76,13 +75,13 @@ func TestLayer(t *testing.T) {
         pw := imagick.NewPixelWand()
         pw.SetColor("none")
 
-        layer := models.Layer{}
+        layer := Layer{}
         err := json.Unmarshal([]byte(gimly_test.MainLayer), &layer)
         So(err, ShouldBeNil)
 
         baseImage.NewImage(uint(layer.DesignWidth), uint(layer.DesignHeight), pw)
 
-        result, err := models.ProcessMain(layer, baseImage)
+        result, err := ProcessMain(layer, baseImage)
         So(err, ShouldBeNil)
 
         So(result, ShouldHaveSameTypeAs, baseImage)
