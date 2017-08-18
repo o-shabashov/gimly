@@ -6,7 +6,7 @@ import (
     "github.com/xeipuuv/gojsonschema"
     "encoding/json"
     "gopkg.in/gographics/imagick.v2/imagick"
-    "gimly/gimly_test"
+    "gimly/test_data"
 )
 
 const testDesignURL = "http://catalog.fm.vsemayki.ru/20283848485940a9c5b6b982.28126856"
@@ -14,8 +14,8 @@ const testDesignURL = "http://catalog.fm.vsemayki.ru/20283848485940a9c5b6b982.28
 func TestPostDataStruct(t *testing.T) {
 
     Convey("Validate JSON by given schema", t, func() {
-        schemaLoader := gojsonschema.NewStringLoader(gimly_test.JsonSchema)
-        documentLoader := gojsonschema.NewStringLoader(gimly_test.Request)
+        schemaLoader := gojsonschema.NewStringLoader(test_data.JsonSchema)
+        documentLoader := gojsonschema.NewStringLoader(test_data.Request)
 
         result, err := gojsonschema.Validate(schemaLoader, documentLoader)
 
@@ -30,13 +30,13 @@ func TestPostDataStruct(t *testing.T) {
 
     Convey("Created PostData struct equal JSON", t, func() {
         p := PostData{}
-        err := json.Unmarshal([]byte(gimly_test.Request), &p)
+        err := json.Unmarshal([]byte(test_data.Request), &p)
         So(err, ShouldBeNil)
 
         Convey("Converting layer coordinates", func() {
             p.ConvertPositioning()
             cpd := PostData{}
-            err := json.Unmarshal([]byte(gimly_test.ConvertedPostData), &cpd)
+            err := json.Unmarshal([]byte(test_data.ConvertedPostData), &cpd)
 
             So(err, ShouldBeNil)
             So(p, ShouldResemble, cpd)
@@ -63,7 +63,7 @@ func TestLayersProcess(t *testing.T) {
         pw.SetColor("none")
 
         layer := Layer{}
-        err := json.Unmarshal([]byte(gimly_test.BackgroundLayer), &layer)
+        err := json.Unmarshal([]byte(test_data.BackgroundLayer), &layer)
         So(err, ShouldBeNil)
 
         baseImage.NewImage(uint(layer.DesignWidth), uint(layer.DesignHeight), pw)
@@ -81,7 +81,7 @@ func TestLayersProcess(t *testing.T) {
         pw.SetColor("none")
 
         layer := Layer{}
-        err := json.Unmarshal([]byte(gimly_test.MainLayer), &layer)
+        err := json.Unmarshal([]byte(test_data.MainLayer), &layer)
         So(err, ShouldBeNil)
 
         baseImage.NewImage(uint(layer.DesignWidth), uint(layer.DesignHeight), pw)
@@ -99,7 +99,7 @@ func TestLayersProcess(t *testing.T) {
         pw.SetColor("none")
 
         layer := Layer{}
-        err := json.Unmarshal([]byte(gimly_test.OverlayLayer), &layer)
+        err := json.Unmarshal([]byte(test_data.OverlayLayer), &layer)
         So(err, ShouldBeNil)
 
         baseImage.NewImage(uint(layer.DesignWidth), uint(layer.DesignHeight), pw)
@@ -117,7 +117,7 @@ func TestLayersProcess(t *testing.T) {
         pw.SetColor("none")
 
         layer := Layer{}
-        err := json.Unmarshal([]byte(gimly_test.MainLayer), &layer)
+        err := json.Unmarshal([]byte(test_data.MainLayer), &layer)
         So(err, ShouldBeNil)
 
         baseImage.NewImage(uint(layer.DesignWidth), uint(layer.DesignHeight), pw)
@@ -131,7 +131,7 @@ func TestLayersProcess(t *testing.T) {
 
     Convey("Main Layer.Build() method should work fine", t, func() {
         p := PostData{}
-        err := json.Unmarshal([]byte(gimly_test.Request), &p)
+        err := json.Unmarshal([]byte(test_data.Request), &p)
         So(err, ShouldBeNil)
 
         p.ConvertPositioning()
@@ -141,7 +141,7 @@ func TestLayersProcess(t *testing.T) {
         pw.SetColor("none")
 
         layer := Layer{}
-        err = json.Unmarshal([]byte(gimly_test.BuildLayer), &layer)
+        err = json.Unmarshal([]byte(test_data.BuildLayer), &layer)
         So(err, ShouldBeNil)
 
         baseImage.NewImage(uint(layer.DesignWidth), uint(layer.DesignHeight), pw)

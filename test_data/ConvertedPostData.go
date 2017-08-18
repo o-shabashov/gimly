@@ -1,4 +1,4 @@
-package gimly_test
+package test_data
 
 const ConvertedPostData  = `
 {
