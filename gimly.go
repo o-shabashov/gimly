@@ -27,7 +27,7 @@ func main() {
 
     // Маршрутизация
     router, err := rest.MakeRouter(
-        rest.Post("/image", GetImage),
+        rest.Post("/generate-image", GetImage),
 
         rest.Get("/.status", func(w rest.ResponseWriter, r *rest.Request) {
             w.WriteJson(statusMw.GetStatus())
