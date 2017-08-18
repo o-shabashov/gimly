@@ -1,6 +1,6 @@
 package gimly_test
 
-const SampleRequest = `
+const Request = `
 {
   "width": 700,
   "height": 700,
@@ -51,5 +51,43 @@ const SampleRequest = `
       "design_top": 0
     }
   ]
+}
+`
+
+const BackgroundLayer = `
+{
+  "background_path": "http:\/\/catalog.fm.vsemayki.ru\/633179955592e5c32f28729.10500083",
+  "type": "background",
+  "background_layout": "tile",
+  "position": 0,
+  "left": 0,
+  "top": 0,
+  "width": 100,
+  "height": 100,
+  "design_width": 100,
+  "design_height": 100,
+  "design_left": 0,
+  "design_top": 0
+}
+`
+
+const MainLayer = `
+{
+  "top": 2.125,
+  "left": -14,
+  "type": "image",
+  "width": 128.43669,
+  "height": 91,
+  "position": 1,
+  "design_top": 1.78571,
+  "design_left": 0.095837030974765,
+  "design_width": 99.905645938047,
+  "design_height": 96.97802,
+  "distortion_type": "polynomial",
+  "distortion_order": 4,
+  "numb_points_side": 7,
+  "distortion_matrix": [0.09732,1.78571,0,9.06593,16.74777,1.78571],
+  "overlay_path": "http:\/\/catalog.fm.vsemayki.ru\/20283848485940a9c5b6b982.28126856",
+  "path": "http:\/\/generator.fm.vsemayki.ru\/147673297059510edb058342.10982043"
 }
 `

@@ -6,6 +6,7 @@ import (
     "gimly/models"
     "github.com/xeipuuv/gojsonschema"
     "encoding/json"
+    "gopkg.in/gographics/imagick.v2/imagick"
     "gimly/gimly_test"
 )
 
@@ -15,7 +16,7 @@ func TestPostDataStruct(t *testing.T) {
 
     Convey("Validate JSON by given schema", t, func() {
         schemaLoader := gojsonschema.NewStringLoader(gimly_test.JsonSchema)
-        documentLoader := gojsonschema.NewStringLoader(gimly_test.SampleRequest)
+        documentLoader := gojsonschema.NewStringLoader(gimly_test.Request)
 
         result, err := gojsonschema.Validate(schemaLoader, documentLoader)
 
@@ -25,7 +26,7 @@ func TestPostDataStruct(t *testing.T) {
 
     Convey("Created PostData struct equal JSON", t, func() {
         p := models.PostData{}
-        err := json.Unmarshal([]byte(gimly_test.SampleRequest), &p)
+        err := json.Unmarshal([]byte(gimly_test.Request), &p)
         So(err, ShouldBeNil)
 
         Convey("Converting layer coordinates", func() {
@@ -41,11 +42,50 @@ func TestPostDataStruct(t *testing.T) {
 }
 
 func TestLayer(t *testing.T) {
+    imagick.Initialize()
+    defer imagick.Terminate()
+
     Convey("Get image blob by HTTP", t, func() {
         data, err := models.GetImageBlob(testDesignURL)
 
         So(err, ShouldBeNil)
         So(data, ShouldHaveSameTypeAs, []byte{})
         So(data, ShouldNotBeEmpty)
+    })
+
+    Convey("Process background layer", t, func() {
+        baseImage := imagick.NewMagickWand()
+        pw := imagick.NewPixelWand()
+        pw.SetColor("none")
+
+        layer := models.Layer{}
+        err := json.Unmarshal([]byte(gimly_test.BackgroundLayer), &layer)
+        So(err, ShouldBeNil)
+
+        baseImage.NewImage(uint(layer.DesignWidth), uint(layer.DesignHeight), pw)
+
+        result, err := models.ProcessBackground(layer, baseImage)
+        So(err, ShouldBeNil)
+
+        So(result, ShouldHaveSameTypeAs, baseImage)
+        So(result.GetImageBlob(), ShouldHaveSameTypeAs, []byte{})
+    })
+
+    Convey("Process main layer", t, func() {
+        baseImage := imagick.NewMagickWand()
+        pw := imagick.NewPixelWand()
+        pw.SetColor("none")
+
+        layer := models.Layer{}
+        err := json.Unmarshal([]byte(gimly_test.MainLayer), &layer)
+        So(err, ShouldBeNil)
+
+        baseImage.NewImage(uint(layer.DesignWidth), uint(layer.DesignHeight), pw)
+
+        result, err := models.ProcessMain(layer, baseImage)
+        So(err, ShouldBeNil)
+
+        So(result, ShouldHaveSameTypeAs, baseImage)
+        So(result.GetImageBlob(), ShouldHaveSameTypeAs, []byte{})
     })
 }

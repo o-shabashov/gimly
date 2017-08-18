@@ -1,5 +1,5 @@
-hash: 9f0388b1c65ac60aa7ccfe492878b1ddba4812772a83002d2380b93e0520083d
-updated: 2017-08-15T14:00:57.677056143+07:00
+hash: 59441be402220fcb931030e247e2c1c2bcfcb551e05b57f62729f9b7e300598c
+updated: 2017-08-17T23:04:14.253326657+07:00
 imports:
 - name: github.com/ant0ine/go-json-rest
   version: 731ccde05312e2c1f5578a504ea8e77d38020340
@@ -8,13 +8,34 @@ imports:
   - rest/trie
 - name: github.com/joho/godotenv
   version: 9d9ddadf44b4c17c42bafdc530ddeee1927c067d
-- name: github.com/pkg/profile
-  version: 5b67d428864e92711fcbd2f8629456121a56d91f
-- name: github.com/xeipuuv/gojsonschema
-  version: 0c8571ac0ce161a5feb57375a9cdf148c98c0f70
 - name: gopkg.in/gographics/imagick.v2
   version: 8258522f85241f2e3d830b07c5fef6865cc16414
   subpackages:
   - imagick
   - imagick/types
-testImports: []
+testImports:
+- name: github.com/gopherjs/gopherjs
+  version: 2b1d432c8a82c9bff0b0baffaeb3ec6e92974112
+  subpackages:
+  - js
+- name: github.com/jtolds/gls
+  version: 77f18212c9c7edc9bd6a33d383a7b545ce62f064
+- name: github.com/smartystreets/assertions
+  version: 1540c14c9f1bd1abeba90f29762a4c6e50582303
+  subpackages:
+  - internal/go-render/render
+  - internal/oglematchers
+- name: github.com/smartystreets/goconvey
+  version: 9e8dc3f972df6c8fcc0375ef492c24d0bb204857
+  subpackages:
+  - convey
+  - convey/gotest
+  - convey/reporting
+- name: github.com/smartystreets/logging
+  version: ac3a674540761aa0b4382094ba4795f917e85c7f
+- name: github.com/xeipuuv/gojsonpointer
+  version: 6fe8760cad3569743d51ddbb243b26f8456742dc
+- name: github.com/xeipuuv/gojsonreference
+  version: e02fc20de94c78484cd5ffb007f8af96be030a45
+- name: github.com/xeipuuv/gojsonschema
+  version: 0c8571ac0ce161a5feb57375a9cdf148c98c0f70

@@ -13,7 +13,10 @@ func ProcessBackground(layer Layer, baseImage *imagick.MagickWand) (*imagick.Mag
         return baseImage, err
     }
 
-    background.ReadImageBlob(data)
+    err = background.ReadImageBlob(data)
+    if err != nil {
+        return baseImage, err
+    }
 
     switch layer.BackgroundLayout {
     case "scale":
@@ -35,7 +38,7 @@ func ProcessBackground(layer Layer, baseImage *imagick.MagickWand) (*imagick.Mag
         break
     }
 
-    baseImage.CompositeImage(background, imagick.COMPOSITE_OP_OVER, x, y)
+    err = baseImage.CompositeImage(background, imagick.COMPOSITE_OP_OVER, x, y)
 
     return baseImage, err
 }

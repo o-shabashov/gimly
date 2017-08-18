@@ -67,7 +67,11 @@ func (layer Layer) Build(channel chan PositionMagicWand, errors chan error) {
 
     // Искажение основного слоя, самая долгая операция
     if len(layer.DistortionMatrix) != 0 {
-        baseImage = ProcessDistort(layer, baseImage)
+        baseImage, err = ProcessDistort(layer, baseImage)
+        if err != nil {
+            errors <- err
+            return
+        }
     }
 
     // Накладываем слой наложения

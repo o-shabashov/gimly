@@ -18,7 +18,7 @@ func ProcessMain(layer Layer, baseImage *imagick.MagickWand) (*imagick.MagickWan
     main.ReadImageBlob(data)
     main.ResizeImage(uint(layer.DesignWidth), uint(layer.DesignHeight), imagick.FILTER_CATROM, 1)
 
-    baseImage.CompositeImage(main, imagick.COMPOSITE_OP_OVER, int(layer.DesignLeft), int(layer.DesignTop))
+    err = baseImage.CompositeImage(main, imagick.COMPOSITE_OP_OVER, int(layer.DesignLeft), int(layer.DesignTop))
 
     return baseImage, err
 }
