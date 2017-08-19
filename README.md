@@ -9,6 +9,8 @@
 # Зависимости
 
 * ImageMagick 6-ой версии. Потенциально можно и на 7, но нужно тогда подключить `gopkg.in/gographics/imagick.v3/imagick` а не `v2` и немного изменить код.
+    * Ubuntu - `sudo apt-get install libmagickwand-dev`
+    * Mac - `brew install imagemagick@6 --from-source`
 * [Glide](https://glide.sh)
 
 # Установка
@@ -55,6 +57,7 @@ $GOPATH/bin/goconvey
 * [BDD фреймворк тестирования GoConvey](http://goconvey.co)
 
 ### Опционально
+
 * [Live reload utility for Go web servers](https://github.com/codegangsta/gin)
 
 # TODO
