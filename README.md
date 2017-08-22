@@ -9,11 +9,23 @@
 # Зависимости
 
 * ImageMagick 6-ой версии. Потенциально можно и на 7, но нужно тогда подключить `gopkg.in/gographics/imagick.v3/imagick` а не `v2` и немного изменить код.
-    * Ubuntu - `sudo apt-get install libmagickwand-dev`
-    * Mac - `brew install imagemagick@6 --from-source`
 * [Glide](https://glide.sh)
 
 # Установка
+
+* Imagick, Ubuntu
+
+```shell
+sudo apt-get install libmagickwand-dev
+```
+
+* Imagick, Mac
+
+```shell
+brew install imagemagick@6 --from-source
+```
+
+* Glide
 
 ```shell
 curl https://glide.sh/get | sh
@@ -30,7 +42,7 @@ go run gimly.go
 
 Гимли будет доступен по адресу [http://localhost:8901](http://localhost:8901)
 
-[![Run in Postman](https://run.pstmn.io/button.svg)](https://app.getpostman.com/run-collection/bb1096a9a186da5214c5)
+[![Run in Postman](https://run.pstmn.io/button.svg)](https://app.getpostman.com/run-collection/4791073523e21c6d5364)
 
 # Важно
 
