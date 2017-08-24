@@ -34,7 +34,6 @@ func ProcessBackground(layer Layer, baseImage *imagick.MagickWand) (*imagick.Mag
     case "center":
         x = (int(baseImage.GetImageWidth()) - int(background.GetImageWidth())) / 2
         x = (int(baseImage.GetImageHeight()) - int(background.GetImageHeight())) / 2
-
         break
     }
 
