@@ -94,23 +94,23 @@ func GetImage(w rest.ResponseWriter, r *rest.Request) {
 
     // Сортируем слои по порядку https://stackoverflow.com/questions/23330781/sort-golang-map-values-by-keys
     var keys []int
-    for k := range mapPositionMw {
-        keys = append(keys, k)
+    for i := range mapPositionMw {
+        keys = append(keys, i)
     }
     sort.Ints(keys)
 
     // Накладываем слои по порядку на финальное изображение
-    for _, k := range keys {
+    for _, v := range keys {
         err := image.CompositeImage(
-            mapPositionMw[k].MagicWand,
+            mapPositionMw[v].MagicWand,
             imagick.COMPOSITE_OP_OVER,
-            int(mapPositionMw[k].Layer.Left),
-            int(mapPositionMw[k].Layer.Top),
+            int(mapPositionMw[v].Layer.Left),
+            int(mapPositionMw[v].Layer.Top),
         )
 
         // Без этого горутины зависнут и рест не отдаст контент, т.к. *MagickWand передаётся в канал по ссылке внутри
         // другой структуры, и не может сам себя уничтожить.
-        mapPositionMw[k].MagicWand.Destroy()
+        mapPositionMw[v].MagicWand.Destroy()
 
         if err != nil {
             rest.Error(w, err.Error(), 500)
