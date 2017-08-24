@@ -106,7 +106,7 @@ const OverlayLayer = `
   "distortion_type": "polynomial",
   "distortion_order": 0,
   "numb_points_side": 7,
-  "distortion_matrix": [0.09732,1.78571,0,9.06593,16.74777,1.78571],
+  "distortion_matrix": [0.09732,1.78571,0,9.06593,16.74777,1.78571,16.74777,1.78571],
   "overlay_path": "http:\/\/catalog.fm.vsemayki.ru\/20283848485940a9c5b6b982.28126856",
   "overlay_width": 100,
   "overlay_height": 100,
