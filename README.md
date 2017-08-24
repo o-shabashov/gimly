@@ -46,7 +46,7 @@ go run gimly.go
 
 # Важно
 
-* При изменении JSON схемы запроса, лучше всего воспользоваться [GoJson](http://github.com/ChimeraCoder/gojson/gojson)  
+* При изменении JSON схемы запроса, лучше всего воспользоваться [GoJson](http://github.com/ChimeraCoder/gojson)  
 
 # Тестирование
 
