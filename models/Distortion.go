@@ -5,7 +5,14 @@ import (
     "gimly/dvm"
 )
 
-const MULTIPLIER  = 2
+// Каждая часть изображения будет расширена в ширину и высоту на это значение в процентах
+const PART_SCALE = 1
+
+// Минимальный размер расширения части изображения в пикселях
+const MIN_PART_SCALE_SIZE = 3
+
+// Множитель, число на которое умножается все изображение, для улучшения качества искажения
+const MULTIPLIER = 2
 
 // TODO правильный тип искажения, на основе запроса
 func ProcessDistort(layer Layer, baseImage *imagick.MagickWand) (*imagick.MagickWand, error) {
@@ -20,7 +27,7 @@ func Polynomial(layer Layer, baseImage *imagick.MagickWand) (*imagick.MagickWand
     return baseImage, err
 }
 
-func PartialDistort(layer Layer, baseImage *imagick.MagickWand) (*imagick.MagickWand, error){
+func PartialDistort(layer Layer, baseImage *imagick.MagickWand) (*imagick.MagickWand, error) {
     var resultImage *imagick.MagickWand
     var err error
     width := baseImage.GetImageWidth() * MULTIPLIER
@@ -42,6 +49,47 @@ func PartialDistort(layer Layer, baseImage *imagick.MagickWand) (*imagick.Magick
     matrix.SetFromDistortionMatrix(layer.DistortionMatrix)
 
     matrixParts := dvm.SplitMatrix(matrix.VectorMatrix, 2, 2)
+
+    for _, matrixPart := range matrixParts {
+        matrix := dvm.DistortionVectorMatrix{}
+        matrix.VectorMatrix = matrixPart
+        matrix.Clone()
+
+        matrix.Multiply(MULTIPLIER)
+
+        partSumWidth := matrix.GetWidth() * PART_SCALE / 100
+        partSumHeight := matrix.GetHeight() * PART_SCALE / 100
+
+        if partSumWidth < MIN_PART_SCALE_SIZE {
+            partSumWidth = MIN_PART_SCALE_SIZE
+        }
+        if partSumHeight < MIN_PART_SCALE_SIZE {
+            partSumHeight = MIN_PART_SCALE_SIZE
+        }
+
+        var imagePart *imagick.MagickWand
+        *imagePart = *baseImage
+
+        imagePart.ScaleImage(width, height)
+        imagePart.CropImage(
+            uint(matrix.GetWidth()+partSumWidth),
+            uint(matrix.GetHeight()+partSumHeight),
+            int(matrix.GetLeft()),
+            int(matrix.GetTop()),
+        )
+
+        var fullImagePart *imagick.MagickWand
+        *fullImagePart = *sampleImage
+        err = fullImagePart.CompositeImage(imagePart, imagick.COMPOSITE_OP_OVER, int(matrix.GetLeft()), int(matrix.GetTop()))
+        err = fullImagePart.DistortImage(imagick.DISTORTION_BILINEAR, matrix.GetDistortionMatrix(), false)
+
+        err = resultImage.CompositeImage(fullImagePart, imagick.COMPOSITE_OP_OVER, 0, 0)
+    }
+
+    // Просто пиздец как тупо, но так написано в оригинальном генераторе
+    if (MULTIPLIER != 1) {
+        resultImage.ScaleImage(width, height)
+    }
 
     return resultImage, err
 }

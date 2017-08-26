@@ -83,6 +83,14 @@ func (d DistortionVectorMatrix) GetLastPoint() DistortionVector {
     return lastRow[len(lastRow)-1]
 }
 
+func (d DistortionVectorMatrix) Clone(){
+    for row, vectorRow := range d.VectorMatrix {
+        for column, vector :=range vectorRow {
+            d.VectorMatrix[row][column] = vector.Clone()
+        }
+    }
+}
+
 // Возвращает массив массивов, в каждом по chunkSize элементов.
 func ArrayChunk(data []float64, chunkSize int) (result [][]float64, err error) {
     for i := 0; i < len(data); i += chunkSize {
