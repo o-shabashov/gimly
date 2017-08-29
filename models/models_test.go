@@ -1,12 +1,14 @@
 package models
 
 import (
+    "encoding/json"
     "testing"
+
+    "gimly/test_data"
+
     . "github.com/smartystreets/goconvey/convey"
     "github.com/xeipuuv/gojsonschema"
-    "encoding/json"
     "gopkg.in/gographics/imagick.v2/imagick"
-    "gimly/test_data"
 )
 
 const testDesignURL = "http://catalog.fm.vsemayki.ru/20283848485940a9c5b6b982.28126856"
@@ -33,7 +35,7 @@ func TestPostDataStruct(t *testing.T) {
         err := json.Unmarshal([]byte(test_data.Request), &p)
         So(err, ShouldBeNil)
 
-        Convey("Converting layer coordinates", func() {
+        Convey("Converting l coordinates", func() {
             p.ConvertPositioning()
             cpd := PostData{}
             err := json.Unmarshal([]byte(test_data.ConvertedPostData), &cpd)
@@ -57,7 +59,7 @@ func TestLayersProcess(t *testing.T) {
         So(data, ShouldNotBeEmpty)
     })
 
-    Convey("Process background layer", t, func() {
+    Convey("Process background l", t, func() {
         baseImage := imagick.NewMagickWand()
         pw := imagick.NewPixelWand()
         pw.SetColor("none")
@@ -68,14 +70,14 @@ func TestLayersProcess(t *testing.T) {
 
         baseImage.NewImage(uint(layer.DesignWidth), uint(layer.DesignHeight), pw)
 
-        result, err := ProcessBackground(layer, baseImage)
+        result, err := layer.ProcessBackground(baseImage)
         So(err, ShouldBeNil)
 
         So(result, ShouldHaveSameTypeAs, baseImage)
         So(result.GetImageBlob(), ShouldHaveSameTypeAs, []byte{})
     })
 
-    Convey("Process main layer", t, func() {
+    Convey("Process main l", t, func() {
         baseImage := imagick.NewMagickWand()
         pw := imagick.NewPixelWand()
         pw.SetColor("none")
@@ -86,14 +88,14 @@ func TestLayersProcess(t *testing.T) {
 
         baseImage.NewImage(uint(layer.DesignWidth), uint(layer.DesignHeight), pw)
 
-        result, err := ProcessMain(layer, baseImage)
+        result, err := layer.ProcessMain(baseImage)
         So(err, ShouldBeNil)
 
         So(result, ShouldHaveSameTypeAs, baseImage)
         So(result.GetImageBlob(), ShouldHaveSameTypeAs, []byte{})
     })
 
-    Convey("Process overlay layer", t, func() {
+    Convey("Process overlay l", t, func() {
         baseImage := imagick.NewMagickWand()
         pw := imagick.NewPixelWand()
         pw.SetColor("none")
@@ -104,14 +106,14 @@ func TestLayersProcess(t *testing.T) {
 
         baseImage.NewImage(uint(layer.DesignWidth), uint(layer.DesignHeight), pw)
 
-        result, err := ProcessOverlay(layer, baseImage)
+        result, err := layer.ProcessOverlay(baseImage)
         So(err, ShouldBeNil)
 
         So(result, ShouldHaveSameTypeAs, baseImage)
         So(result.GetImageBlob(), ShouldHaveSameTypeAs, []byte{})
     })
 
-    Convey("Process distortion by main layer", t, func() {
+    Convey("Process distortion by main l", t, func() {
         baseImage := imagick.NewMagickWand()
         pw := imagick.NewPixelWand()
         pw.SetColor("none")
@@ -122,7 +124,7 @@ func TestLayersProcess(t *testing.T) {
 
         baseImage.NewImage(uint(layer.DesignWidth), uint(layer.DesignHeight), pw)
 
-        result, err := ProcessDistort(layer, baseImage)
+        result, err := layer.ProcessDistort(baseImage)
         So(err, ShouldBeNil)
 
         So(result, ShouldHaveSameTypeAs, baseImage)

@@ -1,18 +1,19 @@
-package dvm
+package models
 
 import (
-    "testing"
-    . "github.com/smartystreets/goconvey/convey"
-    "gimly/test_data"
     "encoding/json"
-    "gimly/models"
+    "testing"
+
+    "gimly/test_data"
+
+    . "github.com/smartystreets/goconvey/convey"
 )
 
 func TestSetFromDistortionMatrix(t *testing.T) {
 
     Convey("Is matrix chunks are divided to arrays by 2*DIMENSION in each?", t, func() {
         d := DistortionVectorMatrix{}
-        layer := models.Layer{}
+        layer := Layer{}
         err := json.Unmarshal([]byte(test_data.OverlayLayer), &layer)
         So(err, ShouldBeNil)
 

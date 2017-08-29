@@ -1,14 +1,16 @@
 package main
 
 import (
-    "net/http"
     "log"
-    "gopkg.in/gographics/imagick.v2/imagick"
-    "github.com/ant0ine/go-json-rest/rest"
-    "github.com/joho/godotenv"
+    "net/http"
     "os"
     "sort"
+
     "gimly/models"
+
+    "github.com/ant0ine/go-json-rest/rest"
+    "github.com/joho/godotenv"
+    "gopkg.in/gographics/imagick.v2/imagick"
 )
 
 func main() {
