@@ -5,6 +5,8 @@ import (
 )
 
 const DISTORT_POLYNOMIAL string = "polynomial"
+const DISTORT_PARTIAL string = "partial"
+
 const NUMB_COORDINATES_POINT int = 4
 
 // Каждая часть изображения будет расширена в ширину и высоту на это значение в процентах
@@ -172,14 +174,20 @@ func (l Layer) ProcessOverlay(baseImage *imagick.MagickWand, ) (*imagick.MagickW
     return baseImage, err
 }
 
-// TODO правильный тип искажения, на основе запроса
-func (l Layer) ProcessDistort(baseImage *imagick.MagickWand) (*imagick.MagickWand, error) {
-    err := baseImage.DistortImage(imagick.DISTORTION_POLYNOMIAL, l.DistortionMatrix, false)
 
-    return baseImage, err
+func (l Layer) ProcessDistort(baseImage *imagick.MagickWand) (bi *imagick.MagickWand, err error) {
+    if l.DistortionType == DISTORT_POLYNOMIAL {
+        bi, err = l.PolynomialDistort(baseImage)
+    }
+
+    if l.DistortionType == DISTORT_PARTIAL {
+        bi, err = l.PartialDistort(baseImage)
+    }
+
+    return
 }
 
-func (l Layer) Polynomial(baseImage *imagick.MagickWand) (*imagick.MagickWand, error) {
+func (l Layer) PolynomialDistort(baseImage *imagick.MagickWand) (*imagick.MagickWand, error) {
     err := baseImage.DistortImage(imagick.DISTORTION_POLYNOMIAL, l.DistortionMatrix, false)
 
     return baseImage, err
@@ -201,7 +209,7 @@ func (l Layer) PartialDistort(baseImage *imagick.MagickWand) (*imagick.MagickWan
     // Copying data from the memory of sampleImage onto the data of resultImage. They continue to remain distinct areas
     // of memory, so updates will not propagate.
     // See https://stackoverflow.com/questions/21011023/copy-pointer-values-a-b-in-golang
-    *resultImage = *sampleImage
+    //*resultImage = *sampleImage // FIXME не работает, зависает!!!
 
     matrix := DistortionVectorMatrix{}
     matrix.SetFromDistortionMatrix(l.DistortionMatrix)

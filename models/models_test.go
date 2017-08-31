@@ -17,7 +17,7 @@ func TestPostDataStruct(t *testing.T) {
 
     Convey("Validate JSON by given schema", t, func() {
         schemaLoader := gojsonschema.NewStringLoader(test_data.JsonSchema)
-        documentLoader := gojsonschema.NewStringLoader(test_data.Request)
+        documentLoader := gojsonschema.NewStringLoader(test_data.RequestPolynomialDistort)
 
         result, err := gojsonschema.Validate(schemaLoader, documentLoader)
 
@@ -32,7 +32,7 @@ func TestPostDataStruct(t *testing.T) {
 
     Convey("Created PostData struct equal JSON", t, func() {
         p := PostData{}
-        err := json.Unmarshal([]byte(test_data.Request), &p)
+        err := json.Unmarshal([]byte(test_data.RequestPolynomialDistort), &p)
         So(err, ShouldBeNil)
 
         Convey("Converting l coordinates", func() {
@@ -133,7 +133,7 @@ func TestLayersProcess(t *testing.T) {
 
     Convey("Main Layer.Build() method should work fine", t, func() {
         p := PostData{}
-        err := json.Unmarshal([]byte(test_data.Request), &p)
+        err := json.Unmarshal([]byte(test_data.RequestPolynomialDistort), &p)
         So(err, ShouldBeNil)
 
         p.ConvertPositioning()

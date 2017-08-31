@@ -11,7 +11,7 @@ func TestValidTestdata(t *testing.T) {
 
     Convey("Sure that all test data is valid JSON", t, func() {
         r := models.PostData{}
-        err := json.Unmarshal([]byte(Request), &r)
+        err := json.Unmarshal([]byte(RequestPolynomialDistort), &r)
         So(err, ShouldBeNil)
 
         l := models.Layer{}
