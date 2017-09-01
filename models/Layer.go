@@ -4,19 +4,10 @@ import (
     "gopkg.in/gographics/imagick.v2/imagick"
 )
 
-const DISTORT_POLYNOMIAL string = "polynomial"
-const DISTORT_PARTIAL string = "partial"
-
-const NUMB_COORDINATES_POINT int = 4
-
-// Каждая часть изображения будет расширена в ширину и высоту на это значение в процентах
-const PART_SCALE = 1
-
-// Минимальный размер расширения части изображения в пикселях
-const MIN_PART_SCALE_SIZE = 3
-
-// Множитель, число на которое умножается все изображение, для улучшения качества искажения
-const MULTIPLIER = 2
+const (
+    DISTORT_POLYNOMIAL     string = "polynomial"
+    NUMB_COORDINATES_POINT int    = 4
+)
 
 type Layer struct {
     Top              float64   `json:"top"`
@@ -174,14 +165,9 @@ func (l Layer) ProcessOverlay(baseImage *imagick.MagickWand, ) (*imagick.MagickW
     return baseImage, err
 }
 
-
 func (l Layer) ProcessDistort(baseImage *imagick.MagickWand) (bi *imagick.MagickWand, err error) {
     if l.DistortionType == DISTORT_POLYNOMIAL {
         bi, err = l.PolynomialDistort(baseImage)
-    }
-
-    if l.DistortionType == DISTORT_PARTIAL {
-        bi, err = l.PartialDistort(baseImage)
     }
 
     return
@@ -191,71 +177,4 @@ func (l Layer) PolynomialDistort(baseImage *imagick.MagickWand) (*imagick.Magick
     err := baseImage.DistortImage(imagick.DISTORTION_POLYNOMIAL, l.DistortionMatrix, false)
 
     return baseImage, err
-}
-
-func (l Layer) PartialDistort(baseImage *imagick.MagickWand) (*imagick.MagickWand, error) {
-    var resultImage *imagick.MagickWand
-    var err error
-    width := baseImage.GetImageWidth() * MULTIPLIER
-    height := baseImage.GetImageHeight() * MULTIPLIER
-
-    sampleImage := imagick.NewMagickWand()
-    pw := imagick.NewPixelWand()
-    pw.SetColor("none")
-
-    sampleImage.NewImage(height, width, pw)
-    sampleImage.SetImageVirtualPixelMethod(imagick.VIRTUAL_PIXEL_TRANSPARENT)
-
-    // Copying data from the memory of sampleImage onto the data of resultImage. They continue to remain distinct areas
-    // of memory, so updates will not propagate.
-    // See https://stackoverflow.com/questions/21011023/copy-pointer-values-a-b-in-golang
-    //*resultImage = *sampleImage // FIXME не работает, зависает!!!
-
-    matrix := DistortionVectorMatrix{}
-    matrix.SetFromDistortionMatrix(l.DistortionMatrix)
-
-    //matrixParts := SplitMatrix(matrix.VectorMatrix, 2, 2)
-
-    //for _, matrixPart := range matrixParts {
-    //    matrix := DistortionVectorMatrix{}
-    //    matrix.VectorMatrix = matrixPart
-    //    matrix.Clone()
-    //
-    //    matrix.Multiply(MULTIPLIER)
-    //
-    //    partSumWidth := matrix.GetWidth() * PART_SCALE / 100
-    //    partSumHeight := matrix.GetHeight() * PART_SCALE / 100
-    //
-    //    if partSumWidth < MIN_PART_SCALE_SIZE {
-    //        partSumWidth = MIN_PART_SCALE_SIZE
-    //    }
-    //    if partSumHeight < MIN_PART_SCALE_SIZE {
-    //        partSumHeight = MIN_PART_SCALE_SIZE
-    //    }
-    //
-    //    var imagePart *imagick.MagickWand
-    //    *imagePart = *baseImage
-    //
-    //    imagePart.ScaleImage(width, height)
-    //    imagePart.CropImage(
-    //        uint(matrix.GetWidth()+partSumWidth),
-    //        uint(matrix.GetHeight()+partSumHeight),
-    //        int(matrix.GetLeft()),
-    //        int(matrix.GetTop()),
-    //    )
-    //
-    //    var fullImagePart *imagick.MagickWand
-    //    *fullImagePart = *sampleImage
-    //    err = fullImagePart.CompositeImage(imagePart, imagick.COMPOSITE_OP_OVER, int(matrix.GetLeft()), int(matrix.GetTop()))
-    //    err = fullImagePart.DistortImage(imagick.DISTORTION_BILINEAR, matrix.GetDistortionMatrix(), false)
-    //
-    //    err = resultImage.CompositeImage(fullImagePart, imagick.COMPOSITE_OP_OVER, 0, 0)
-    //}
-    //
-    //// Просто пиздец как тупо, но так написано в оригинальном генераторе
-    //if (MULTIPLIER != 1) {
-    //    resultImage.ScaleImage(width, height)
-    //}
-
-    return resultImage, err
 }
