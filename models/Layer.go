@@ -215,7 +215,7 @@ func (l Layer) PartialDistort(baseImage *imagick.MagickWand) (*imagick.MagickWan
     matrix.SetFromDistortionMatrix(l.DistortionMatrix)
 
     //matrixParts := SplitMatrix(matrix.VectorMatrix, 2, 2)
-
+    //
     //for _, matrixPart := range matrixParts {
     //    matrix := DistortionVectorMatrix{}
     //    matrix.VectorMatrix = matrixPart

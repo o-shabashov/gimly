@@ -6,7 +6,7 @@ type DistortionVectorMatrix struct {
     VectorMatrix [][]DistortionVector
 }
 
-func (d DistortionVectorMatrix) SetFromDistortionMatrix(distortionMatrix []float64) []DistortionVector {
+func (d DistortionVectorMatrix) SetFromDistortionMatrix(distortionMatrix []float64){
     chunksMatrix, err := ArrayChunk(distortionMatrix, 2*DIMENSION)
     if err != nil {
         panic(err)
@@ -21,27 +21,27 @@ func (d DistortionVectorMatrix) SetFromDistortionMatrix(distortionMatrix []float
         })
     }
 
-    vectorMatrix := [][]DistortionVector{}
+    prevVectorStartTop := vectors[0].Start.Top
 
-    // TODO нужен пример запроса
-    //prevVectorStartTop := vectors[0].Start.Top
-    //
-    //for _, vector := range vectors {
-    //    index := len(vectorMatrix) - 1
-    //
-    //    if vector.Start.Top == prevVectorStartTop {
-    //        vectorMatrix[index] = append(vectorMatrix[index], []DistortionVector{vector}...)
-    //    } else {
-    //        vectorMatrix = append(vectorMatrix, []DistortionVector{})
-    //        vectorMatrix[index + 1] = append(vectorMatrix[index + 1], []DistortionVector{vector}...)
-    //    }
-    //
-    //    prevVectorStartTop = vector.Start.Top
-    //}
+    for _, vector := range vectors {
+        index := len(d.VectorMatrix) - 1
+        if index < 0 {
+            index = 0
+        }
 
-    d.VectorMatrix = vectorMatrix
+        if len(d.VectorMatrix) == 0 {
+            d.VectorMatrix = append(d.VectorMatrix, []DistortionVector{})
+        }
 
-    return vectors // INT исправить в тестах, не должен возвращать вектора, проверять d.VectorMatrix
+        if vector.Start.Top == prevVectorStartTop {
+            d.VectorMatrix[index] = append(d.VectorMatrix[index], []DistortionVector{vector}...)
+        } else {
+            d.VectorMatrix = append(d.VectorMatrix, []DistortionVector{})
+            d.VectorMatrix[index+1] = append(d.VectorMatrix[index+1], []DistortionVector{vector}...)
+        }
+
+        prevVectorStartTop = vector.Start.Top
+    }
 }
 
 func (d DistortionVectorMatrix) GetDistortionMatrix() (numbers []float64) {
@@ -91,35 +91,35 @@ func (d DistortionVectorMatrix) Clone() {
     }
 }
 
-// INT TODO нужен пример запроса
-func SplitMatrix(matrix [][]DistortionVector, rowSize int, columnSize int) (parts []float64) {
-    amountRows := len(matrix)
-    amountColumns := len(matrix[0])
-
-    if amountRows < 2 || amountColumns < 2 {
-        panic("Matrix does not matches the selected row and column size")
-    }
-
-    for row := 0; row < len(matrix); row = row + (rowSize - 1) {
-        for column := 0; column < len(matrix[row]); column = column + (columnSize - 1) {
-            if amountRows-(rowSize-1) > row && amountColumns-(columnSize-1) > column {
-                parts = append(parts, SubMatrix(matrix, row, column, rowSize, columnSize)...)
-            }
-        }
-    }
-    return
-}
-
-// INT TODO нужен пример запроса
-func SubMatrix(matrix [][]DistortionVector, startRow int, startColumn int, endRow int, endColumn int) (subMatrix []float64) {
-    //subMatrix = matrix[startRow:endRow]
-    //
-    //for row, rowItems := range subMatrix {
-    //    subMatrix[row] = rowItems[startColumn:endColumn]
-    //}
-
-    return
-}
+//// INT TODO нужен пример запроса
+//func SplitMatrix(matrix [][]DistortionVector, rowSize int, columnSize int) (parts [][]DistortionVector) {
+//    amountRows := len(matrix)
+//    amountColumns := len(matrix[0])
+//
+//    if amountRows < 2 || amountColumns < 2 {
+//        panic("Matrix does not matches the selected row and column size")
+//    }
+//
+//    for row := 0; row < len(matrix); row = row + (rowSize - 1) {
+//        for column := 0; column < len(matrix[row]); column = column + (columnSize - 1) {
+//            if amountRows-(rowSize-1) > row && amountColumns-(columnSize-1) > column {
+//                parts = append(parts, SubMatrix(matrix, row, column, rowSize, columnSize)...)
+//            }
+//        }
+//    }
+//    return
+//}
+//
+//// INT TODO нужен пример запроса
+//func SubMatrix(matrix [][]DistortionVector, startRow int, startColumn int, endRow int, endColumn int) (subMatrix []float64) {
+//    //subMatrix = matrix[startRow:endRow]
+//    //
+//    //for row, rowItems := range subMatrix {
+//    //    subMatrix[row] = rowItems[startColumn:endColumn]
+//    //}
+//
+//    return
+//}
 
 type Point struct {
     Left float64
