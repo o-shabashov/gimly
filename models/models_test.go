@@ -164,3 +164,26 @@ func TestLayersProcess(t *testing.T) {
         So(mapPositionMw[0], ShouldHaveSameTypeAs, PositionMagicWand{})
     })
 }
+
+func TestHelperFunctions(t *testing.T) {
+    Convey("GetImageBlob should return []byte", t, func() {
+        layer := Layer{}
+        err := json.Unmarshal([]byte(test_data.OverlayLayer), &layer)
+        So(err, ShouldBeNil)
+
+        data, err := GetImageBlob(layer.OverlayPath)
+        So(err, ShouldBeNil)
+        So(data, ShouldHaveSameTypeAs, []byte{})
+    })
+
+    Convey("ArrayChunk should return 2х2 array", t, func() {
+        layer := Layer{}
+        err := json.Unmarshal([]byte(test_data.OverlayLayer), &layer)
+        So(err, ShouldBeNil)
+
+        result, err := ArrayChunk(layer.DistortionMatrix, 4)
+        So(err, ShouldBeNil)
+        So(result, ShouldResemble, [][]float64{{0.09732, 1.78571, 0, 9.06593}, {16.74777, 1.78571, 16.74777, 1.78571}})
+    })
+
+}

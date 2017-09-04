@@ -4,6 +4,8 @@ import (
     "encoding/json"
     "testing"
 
+    . "github.com/smartystreets/goconvey/convey"
+
     "gimly/models"
 )
 
