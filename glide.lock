@@ -1,5 +1,5 @@
 hash: 59441be402220fcb931030e247e2c1c2bcfcb551e05b57f62729f9b7e300598c
-updated: 2017-08-24T09:54:29.057843996+07:00
+updated: 2017-09-03T19:35:28.902785069+07:00
 imports:
 - name: github.com/ant0ine/go-json-rest
   version: 731ccde05312e2c1f5578a504ea8e77d38020340
@@ -9,13 +9,13 @@ imports:
 - name: github.com/joho/godotenv
   version: c9360df4d16dc0e391ea2f28da2d31a9ede2e26f
 - name: gopkg.in/gographics/imagick.v2
-  version: 8258522f85241f2e3d830b07c5fef6865cc16414
+  version: 3fa86e04cecbb52b3410c8937f4505f43841bcd6
   subpackages:
   - imagick
   - imagick/types
 testImports:
 - name: github.com/gopherjs/gopherjs
-  version: 95deb33d587c9f6e24b494ea9bdf9648c48f9a60
+  version: f7c56533adfac99e12ccdccfec04a466d2a778da
   subpackages:
   - js
 - name: github.com/jtolds/gls
@@ -26,7 +26,7 @@ testImports:
   - internal/go-render/render
   - internal/oglematchers
 - name: github.com/smartystreets/goconvey
-  version: 9e8dc3f972df6c8fcc0375ef492c24d0bb204857
+  version: e5b2b7c9111590d019a696c7800593f666e1a7f4
   subpackages:
   - convey
   - convey/gotest

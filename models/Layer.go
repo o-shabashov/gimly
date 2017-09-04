@@ -4,10 +4,19 @@ import (
     "gopkg.in/gographics/imagick.v2/imagick"
 )
 
-const (
-    DISTORT_POLYNOMIAL     string = "polynomial"
-    NUMB_COORDINATES_POINT int    = 4
-)
+const DISTORT_POLYNOMIAL string = "polynomial"
+const DISTORT_PARTIAL string = "partial"
+
+const NUMB_COORDINATES_POINT int = 4
+
+// Каждая часть изображения будет расширена в ширину и высоту на это значение в процентах
+const PART_SCALE = 1
+
+// Минимальный размер расширения части изображения в пикселях
+const MIN_PART_SCALE_SIZE = 3
+
+// Множитель, число на которое умножается все изображение, для улучшения качества искажения
+const MULTIPLIER = 2
 
 type Layer struct {
     Top              float64   `json:"top"`
@@ -42,7 +51,21 @@ func (l Layer) Build(channel chan PositionMagicWand, errors chan error) {
     baseImage := imagick.NewMagickWand()
     pw := imagick.NewPixelWand()
     pw.SetColor("none")
-    baseImage.NewImage(uint(l.DesignWidth), uint(l.DesignHeight), pw)
+    baseImage.NewImage(uint(l.Width), uint(l.Height), pw)
+
+    // Фон для основного изображения
+    bgImg := imagick.NewMagickWand()
+    bpw := imagick.NewPixelWand()
+    bpw.SetColor("none")
+
+    if l.BackgroundColor != "" {
+        bpw.SetColor("#" + l.BackgroundColor)
+    }
+
+    bgImg.NewImage(uint(l.DesignWidth), uint(l.DesignHeight), bpw)
+
+    // Добавляем фон на основное изображение
+    baseImage.CompositeImage(bgImg, imagick.COMPOSITE_OP_OVER, int(l.DesignLeft), int(l.DesignTop))
 
     var err error
     pmw := PositionMagicWand{Layer: l}
@@ -170,6 +193,10 @@ func (l Layer) ProcessDistort(baseImage *imagick.MagickWand) (bi *imagick.Magick
         bi, err = l.PolynomialDistort(baseImage)
     }
 
+    if l.DistortionType == DISTORT_PARTIAL {
+        bi, err = l.PartialDistort(baseImage)
+    }
+
     return
 }
 
@@ -177,4 +204,59 @@ func (l Layer) PolynomialDistort(baseImage *imagick.MagickWand) (*imagick.Magick
     err := baseImage.DistortImage(imagick.DISTORTION_POLYNOMIAL, l.DistortionMatrix, false)
 
     return baseImage, err
+}
+
+func (l Layer) PartialDistort(baseImage *imagick.MagickWand) (*imagick.MagickWand, error) {
+    var err error
+    width := baseImage.GetImageWidth() * MULTIPLIER
+    height := baseImage.GetImageHeight() * MULTIPLIER
+
+    resultImage := InitImage(width, height)
+
+    matrix := DistortionVectorMatrix{}
+    matrix.SetFromDistortionMatrix(l.DistortionMatrix)
+
+    matrixParts := SplitMatrix(matrix.VectorMatrix, 2, 2)
+
+    for _, matrixPart := range matrixParts {
+        dvm := DistortionVectorMatrix{VectorMatrix: matrixPart}
+        dvm.Multiply(MULTIPLIER)
+
+        // Конвертация структуры в массив, понятный ImageMagick
+        matrix := dvm.GetDistortionMatrix()
+
+        partSumWidth := dvm.GetWidth() * PART_SCALE / 100
+        partSumHeight := dvm.GetHeight() * PART_SCALE / 100
+
+        if partSumWidth < MIN_PART_SCALE_SIZE {
+            partSumWidth = MIN_PART_SCALE_SIZE
+        }
+        if partSumHeight < MIN_PART_SCALE_SIZE {
+            partSumHeight = MIN_PART_SCALE_SIZE
+        }
+
+        imagePart := InitImage(uint(l.Width), uint(l.Height))
+        imagePart.CompositeImage(baseImage, imagick.COMPOSITE_OP_OVER, 0, 0)
+
+        imagePart.ScaleImage(width, height)
+        imagePart.CropImage(
+            uint(dvm.GetWidth()+partSumWidth),
+            uint(dvm.GetHeight()+partSumHeight),
+            int(dvm.GetLeft()),
+            int(dvm.GetTop()),
+        )
+
+        fullImagePart := InitImage(width, height)
+        err = fullImagePart.CompositeImage(imagePart, imagick.COMPOSITE_OP_OVER, int(dvm.GetLeft()), int(dvm.GetTop()))
+        err = fullImagePart.DistortImage(imagick.DISTORTION_BILINEAR, matrix, false)
+
+        err = resultImage.CompositeImage(fullImagePart, imagick.COMPOSITE_OP_OVER, 0, 0)
+    }
+
+    // Возвращаем нормальный размер слою
+    if MULTIPLIER != 1 {
+        resultImage.ScaleImage(width/MULTIPLIER, height/MULTIPLIER)
+    }
+
+    return resultImage, err
 }
