@@ -51,7 +51,21 @@ func (l Layer) Build(channel chan PositionMagicWand, errors chan error) {
     baseImage := imagick.NewMagickWand()
     pw := imagick.NewPixelWand()
     pw.SetColor("none")
-    baseImage.NewImage(uint(l.DesignWidth), uint(l.DesignHeight), pw)
+    baseImage.NewImage(uint(l.Width), uint(l.Height), pw)
+
+    // Фон для основного изображения
+    bgImg := imagick.NewMagickWand()
+    bpw := imagick.NewPixelWand()
+    bpw.SetColor("none")
+
+    if l.BackgroundColor != "" {
+        bpw.SetColor("#" + l.BackgroundColor)
+    }
+
+    bgImg.NewImage(uint(l.DesignWidth), uint(l.DesignHeight), bpw)
+
+    // Добавляем фон на основное изображение
+    baseImage.CompositeImage(bgImg, imagick.COMPOSITE_OP_OVER, int(l.DesignLeft), int(l.DesignTop))
 
     var err error
     pmw := PositionMagicWand{Layer: l}
@@ -174,7 +188,6 @@ func (l Layer) ProcessOverlay(baseImage *imagick.MagickWand, ) (*imagick.MagickW
     return baseImage, err
 }
 
-
 func (l Layer) ProcessDistort(baseImage *imagick.MagickWand) (bi *imagick.MagickWand, err error) {
     if l.DistortionType == DISTORT_POLYNOMIAL {
         bi, err = l.PolynomialDistort(baseImage)
@@ -194,7 +207,6 @@ func (l Layer) PolynomialDistort(baseImage *imagick.MagickWand) (*imagick.Magick
 }
 
 func (l Layer) PartialDistort(baseImage *imagick.MagickWand) (*imagick.MagickWand, error) {
-    var resultImage *imagick.MagickWand
     var err error
     width := baseImage.GetImageWidth() * MULTIPLIER
     height := baseImage.GetImageHeight() * MULTIPLIER
@@ -203,59 +215,71 @@ func (l Layer) PartialDistort(baseImage *imagick.MagickWand) (*imagick.MagickWan
     pw := imagick.NewPixelWand()
     pw.SetColor("none")
 
-    sampleImage.NewImage(height, width, pw)
+    mc := imagick.NewPixelWand()
+    mc.SetColor("transparent")
+    sampleImage.NewImage(width, height, pw)
+    sampleImage.SetImageMatte(true)
+    sampleImage.SetImageMatteColor(mc)
     sampleImage.SetImageVirtualPixelMethod(imagick.VIRTUAL_PIXEL_TRANSPARENT)
 
-    // Copying data from the memory of sampleImage onto the data of resultImage. They continue to remain distinct areas
-    // of memory, so updates will not propagate.
-    // See https://stackoverflow.com/questions/21011023/copy-pointer-values-a-b-in-golang
-    //*resultImage = *sampleImage // FIXME не работает, зависает!!!
+    resultImage := imagick.NewMagickWand()
+    resultImage.NewImage(width, height, pw)
+    resultImage.SetImageMatte(true)
+    resultImage.SetImageMatteColor(mc)
+    resultImage.SetImageVirtualPixelMethod(imagick.VIRTUAL_PIXEL_TRANSPARENT)
 
     matrix := DistortionVectorMatrix{}
     matrix.SetFromDistortionMatrix(l.DistortionMatrix)
 
-    //matrixParts := SplitMatrix(matrix.VectorMatrix, 2, 2)
-    //
-    //for _, matrixPart := range matrixParts {
-    //    matrix := DistortionVectorMatrix{}
-    //    matrix.VectorMatrix = matrixPart
-    //    matrix.Clone()
-    //
-    //    matrix.Multiply(MULTIPLIER)
-    //
-    //    partSumWidth := matrix.GetWidth() * PART_SCALE / 100
-    //    partSumHeight := matrix.GetHeight() * PART_SCALE / 100
-    //
-    //    if partSumWidth < MIN_PART_SCALE_SIZE {
-    //        partSumWidth = MIN_PART_SCALE_SIZE
-    //    }
-    //    if partSumHeight < MIN_PART_SCALE_SIZE {
-    //        partSumHeight = MIN_PART_SCALE_SIZE
-    //    }
-    //
-    //    var imagePart *imagick.MagickWand
-    //    *imagePart = *baseImage
-    //
-    //    imagePart.ScaleImage(width, height)
-    //    imagePart.CropImage(
-    //        uint(matrix.GetWidth()+partSumWidth),
-    //        uint(matrix.GetHeight()+partSumHeight),
-    //        int(matrix.GetLeft()),
-    //        int(matrix.GetTop()),
-    //    )
-    //
-    //    var fullImagePart *imagick.MagickWand
-    //    *fullImagePart = *sampleImage
-    //    err = fullImagePart.CompositeImage(imagePart, imagick.COMPOSITE_OP_OVER, int(matrix.GetLeft()), int(matrix.GetTop()))
-    //    err = fullImagePart.DistortImage(imagick.DISTORTION_BILINEAR, matrix.GetDistortionMatrix(), false)
-    //
-    //    err = resultImage.CompositeImage(fullImagePart, imagick.COMPOSITE_OP_OVER, 0, 0)
-    //}
-    //
-    //// Просто пиздец как тупо, но так написано в оригинальном генераторе
-    //if (MULTIPLIER != 1) {
-    //    resultImage.ScaleImage(width, height)
-    //}
+    matrixParts := SplitMatrix(matrix.VectorMatrix, 2, 2)
+
+    for _, matrixPart := range matrixParts {
+        matrixNew := DistortionVectorMatrix{VectorMatrix: matrixPart}
+
+        matrixNew.Multiply(MULTIPLIER)
+
+        partSumWidth := matrixNew.GetWidth() * PART_SCALE / 100
+        partSumHeight := matrixNew.GetHeight() * PART_SCALE / 100
+
+        if partSumWidth < MIN_PART_SCALE_SIZE {
+            partSumWidth = MIN_PART_SCALE_SIZE
+        }
+        if partSumHeight < MIN_PART_SCALE_SIZE {
+            partSumHeight = MIN_PART_SCALE_SIZE
+        }
+
+        imagePart := imagick.NewMagickWand()
+        pw := imagick.NewPixelWand()
+        pw.SetColor("none")
+        imagePart.NewImage(uint(l.Width), uint(l.Height), pw)
+        imagePart.CompositeImage(baseImage, imagick.COMPOSITE_OP_OVER, 0, 0)
+
+        imagePart.ScaleImage(width, height)
+        imagePart.CropImage(
+            uint(matrixNew.GetWidth()+partSumWidth),
+            uint(matrixNew.GetHeight()+partSumHeight),
+            int(matrixNew.GetLeft()),
+            int(matrixNew.GetTop()),
+        )
+
+        fullImagePart := imagick.NewMagickWand()
+        fullImagePart.NewImage(width, height, pw)
+        fullImagePart.SetImageMatte(true)
+        fullImagePart.SetImageMatteColor(mc)
+        fullImagePart.SetImageVirtualPixelMethod(imagick.VIRTUAL_PIXEL_TRANSPARENT)
+
+        err = fullImagePart.CompositeImage(imagePart, imagick.COMPOSITE_OP_OVER, int(matrixNew.GetLeft()), int(matrixNew.GetTop()))
+
+        distMatrix := matrixNew.GetDistortionMatrix()
+        err = fullImagePart.DistortImage(imagick.DISTORTION_BILINEAR, distMatrix, false)
+
+        err = resultImage.CompositeImage(fullImagePart, imagick.COMPOSITE_OP_OVER, 0, 0)
+    }
+
+    // Возвращаем нормальный размер слою
+    if MULTIPLIER != 1 {
+        resultImage.ScaleImage(width/MULTIPLIER, height/MULTIPLIER)
+    }
 
     return resultImage, err
 }

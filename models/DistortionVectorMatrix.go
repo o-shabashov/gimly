@@ -6,7 +6,8 @@ type DistortionVectorMatrix struct {
     VectorMatrix [][]DistortionVector
 }
 
-func (d DistortionVectorMatrix) SetFromDistortionMatrix(distortionMatrix []float64){
+func (d *DistortionVectorMatrix) SetFromDistortionMatrix(distortionMatrix []float64) {
+    // Разбиваем плоский массив на куски по 2*DIMENSION
     chunksMatrix, err := ArrayChunk(distortionMatrix, 2*DIMENSION)
     if err != nil {
         panic(err)
@@ -14,6 +15,7 @@ func (d DistortionVectorMatrix) SetFromDistortionMatrix(distortionMatrix []float
 
     vectors := []DistortionVector{}
 
+    // Берём первые четыре элемента каждого chunksMatrix, создаём новую структуру DistortionVector и укладываем в массив
     for _, chunk := range chunksMatrix {
         vectors = append(vectors, DistortionVector{
             Start: Point{Left: chunk[0], Top: chunk[1]},
@@ -23,6 +25,7 @@ func (d DistortionVectorMatrix) SetFromDistortionMatrix(distortionMatrix []float
 
     prevVectorStartTop := vectors[0].Start.Top
 
+    // Группировка векторов по координате Start.Top - каждый такой вектор укладывается в свой массив
     for _, vector := range vectors {
         index := len(d.VectorMatrix) - 1
         if index < 0 {
@@ -54,12 +57,19 @@ func (d DistortionVectorMatrix) GetDistortionMatrix() (numbers []float64) {
     return
 }
 
-func (d DistortionVectorMatrix) Multiply(multiplier float64) {
+func (d *DistortionVectorMatrix) Multiply(multiplier float64) {
+    // Потому что в Go нельзя в цикле брать ссылку на оригинальные данные, как, например, в PHP &$variable
+    vm := [][]DistortionVector{}
+    vr := []DistortionVector{}
+
     for _, vectorRow := range d.VectorMatrix {
         for _, vector := range vectorRow {
             vector.Multiply(multiplier)
+            vr = append(vr, vector)
         }
+        vm = append(vm, vr)
     }
+    d.VectorMatrix = vm
 }
 
 // Несколько геттеров, чтобы не дублировать код
@@ -83,50 +93,44 @@ func (d DistortionVectorMatrix) GetLastPoint() DistortionVector {
     return lastRow[len(lastRow)-1]
 }
 
-func (d DistortionVectorMatrix) Clone() {
-    for row, vectorRow := range d.VectorMatrix {
-        for column, vector := range vectorRow {
-            d.VectorMatrix[row][column] = vector.Clone()
+// Подразбиение исходной матрицы на меньшие матрицы, 2х2
+func SplitMatrix(matrix [][]DistortionVector, rowSize int, columnSize int) (parts [][][]DistortionVector) {
+    amountRows := len(matrix)
+    amountColumns := len(matrix[0])
+
+    if amountRows < 2 || amountColumns < 2 {
+        panic("Matrix does not matches the selected row and column size")
+    }
+
+    for row := 0; row < len(matrix); row = row + (rowSize - 1) {
+        for column := 0; column < len(matrix[row]); column = column + (columnSize - 1) {
+            if amountRows-(rowSize-1) > row && amountColumns-(columnSize-1) > column {
+                parts = append(parts, subMatrix(matrix, row, column, rowSize, columnSize))
+            }
         }
     }
+    return
 }
 
-//// INT TODO нужен пример запроса
-//func SplitMatrix(matrix [][]DistortionVector, rowSize int, columnSize int) (parts [][]DistortionVector) {
-//    amountRows := len(matrix)
-//    amountColumns := len(matrix[0])
-//
-//    if amountRows < 2 || amountColumns < 2 {
-//        panic("Matrix does not matches the selected row and column size")
-//    }
-//
-//    for row := 0; row < len(matrix); row = row + (rowSize - 1) {
-//        for column := 0; column < len(matrix[row]); column = column + (columnSize - 1) {
-//            if amountRows-(rowSize-1) > row && amountColumns-(columnSize-1) > column {
-//                parts = append(parts, SubMatrix(matrix, row, column, rowSize, columnSize)...)
-//            }
-//        }
-//    }
-//    return
-//}
-//
-//// INT TODO нужен пример запроса
-//func SubMatrix(matrix [][]DistortionVector, startRow int, startColumn int, endRow int, endColumn int) (subMatrix []float64) {
-//    //subMatrix = matrix[startRow:endRow]
-//    //
-//    //for row, rowItems := range subMatrix {
-//    //    subMatrix[row] = rowItems[startColumn:endColumn]
-//    //}
-//
-//    return
-//}
+// Вспомогательная функция, вынесена для упрощения чтения кода
+func subMatrix(matrix [][]DistortionVector, startRow int, startColumn int, endRow int, endColumn int) ([][]DistortionVector) {
+    tempMatrix := make([][]DistortionVector, len(matrix))
+    copy(tempMatrix, matrix)
+    subMatrix := tempMatrix[startRow:endRow]
+
+    for row, rowItems := range subMatrix {
+        subMatrix[row] = rowItems[startColumn:endColumn + startColumn]
+    }
+
+    return subMatrix
+}
 
 type Point struct {
     Left float64
     Top  float64
 }
 
-func (p Point) Multiply(multiplier float64) {
+func (p *Point) Multiply(multiplier float64) {
     p.Left *= multiplier
     p.Top *= multiplier
 }
@@ -142,11 +146,7 @@ type DistortionVector struct {
 func (d DistortionVector) ToArray() []float64 {
     return append(d.Start.ToArray(), d.End.ToArray()...)
 }
-func (d DistortionVector) Multiply(multiplier float64) {
+func (d *DistortionVector) Multiply(multiplier float64) {
     d.Start.Multiply(multiplier)
     d.End.Multiply(multiplier)
-}
-func (d DistortionVector) Clone() DistortionVector {
-    // TODO понять что делать дебагом генератора с входными данными
-    return d
 }
