@@ -211,22 +211,7 @@ func (l Layer) PartialDistort(baseImage *imagick.MagickWand) (*imagick.MagickWan
     width := baseImage.GetImageWidth() * MULTIPLIER
     height := baseImage.GetImageHeight() * MULTIPLIER
 
-    sampleImage := imagick.NewMagickWand()
-    pw := imagick.NewPixelWand()
-    pw.SetColor("none")
-
-    mc := imagick.NewPixelWand()
-    mc.SetColor("transparent")
-    sampleImage.NewImage(width, height, pw)
-    sampleImage.SetImageMatte(true)
-    sampleImage.SetImageMatteColor(mc)
-    sampleImage.SetImageVirtualPixelMethod(imagick.VIRTUAL_PIXEL_TRANSPARENT)
-
-    resultImage := imagick.NewMagickWand()
-    resultImage.NewImage(width, height, pw)
-    resultImage.SetImageMatte(true)
-    resultImage.SetImageMatteColor(mc)
-    resultImage.SetImageVirtualPixelMethod(imagick.VIRTUAL_PIXEL_TRANSPARENT)
+    resultImage := InitImage(width, height)
 
     matrix := DistortionVectorMatrix{}
     matrix.SetFromDistortionMatrix(l.DistortionMatrix)
@@ -234,12 +219,14 @@ func (l Layer) PartialDistort(baseImage *imagick.MagickWand) (*imagick.MagickWan
     matrixParts := SplitMatrix(matrix.VectorMatrix, 2, 2)
 
     for _, matrixPart := range matrixParts {
-        matrixNew := DistortionVectorMatrix{VectorMatrix: matrixPart}
+        dvm := DistortionVectorMatrix{VectorMatrix: matrixPart}
+        dvm.Multiply(MULTIPLIER)
 
-        matrixNew.Multiply(MULTIPLIER)
+        // Конвертация структуры в массив, понятный ImageMagick
+        matrix := dvm.GetDistortionMatrix()
 
-        partSumWidth := matrixNew.GetWidth() * PART_SCALE / 100
-        partSumHeight := matrixNew.GetHeight() * PART_SCALE / 100
+        partSumWidth := dvm.GetWidth() * PART_SCALE / 100
+        partSumHeight := dvm.GetHeight() * PART_SCALE / 100
 
         if partSumWidth < MIN_PART_SCALE_SIZE {
             partSumWidth = MIN_PART_SCALE_SIZE
@@ -248,30 +235,20 @@ func (l Layer) PartialDistort(baseImage *imagick.MagickWand) (*imagick.MagickWan
             partSumHeight = MIN_PART_SCALE_SIZE
         }
 
-        imagePart := imagick.NewMagickWand()
-        pw := imagick.NewPixelWand()
-        pw.SetColor("none")
-        imagePart.NewImage(uint(l.Width), uint(l.Height), pw)
+        imagePart := InitImage(uint(l.Width), uint(l.Height))
         imagePart.CompositeImage(baseImage, imagick.COMPOSITE_OP_OVER, 0, 0)
 
         imagePart.ScaleImage(width, height)
         imagePart.CropImage(
-            uint(matrixNew.GetWidth()+partSumWidth),
-            uint(matrixNew.GetHeight()+partSumHeight),
-            int(matrixNew.GetLeft()),
-            int(matrixNew.GetTop()),
+            uint(dvm.GetWidth()+partSumWidth),
+            uint(dvm.GetHeight()+partSumHeight),
+            int(dvm.GetLeft()),
+            int(dvm.GetTop()),
         )
 
-        fullImagePart := imagick.NewMagickWand()
-        fullImagePart.NewImage(width, height, pw)
-        fullImagePart.SetImageMatte(true)
-        fullImagePart.SetImageMatteColor(mc)
-        fullImagePart.SetImageVirtualPixelMethod(imagick.VIRTUAL_PIXEL_TRANSPARENT)
-
-        err = fullImagePart.CompositeImage(imagePart, imagick.COMPOSITE_OP_OVER, int(matrixNew.GetLeft()), int(matrixNew.GetTop()))
-
-        distMatrix := matrixNew.GetDistortionMatrix()
-        err = fullImagePart.DistortImage(imagick.DISTORTION_BILINEAR, distMatrix, false)
+        fullImagePart := InitImage(width, height)
+        err = fullImagePart.CompositeImage(imagePart, imagick.COMPOSITE_OP_OVER, int(dvm.GetLeft()), int(dvm.GetTop()))
+        err = fullImagePart.DistortImage(imagick.DISTORTION_BILINEAR, matrix, false)
 
         err = resultImage.CompositeImage(fullImagePart, imagick.COMPOSITE_OP_OVER, 0, 0)
     }

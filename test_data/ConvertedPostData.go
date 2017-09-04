@@ -1,6 +1,6 @@
 package test_data
 
-const ConvertedPostData  = `
+const ConvertedPostData = `
 {
   "format": "jpeg",
   "width": 700,

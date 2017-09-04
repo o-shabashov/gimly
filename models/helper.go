@@ -4,6 +4,8 @@ import (
     "errors"
     "io/ioutil"
     "net/http"
+
+    "gopkg.in/gographics/imagick.v2/imagick"
 )
 
 // Получение картинки дизайна по HTTP
@@ -33,6 +35,20 @@ func ArrayChunk(data []float64, chunkSize int) (result [][]float64, err error) {
 
         result = append(result, data[i:end])
     }
+
+    return
+}
+
+// Создаём новое изображение (холст)
+func InitImage(width uint, height uint) (image *imagick.MagickWand) {
+    pw := imagick.NewPixelWand()
+    pw.SetColor("none")
+
+    image = imagick.NewMagickWand()
+    image.NewImage(width, height, pw)
+    image.SetImageMatte(true)
+    image.SetImageMatteColor(pw)
+    image.SetImageVirtualPixelMethod(imagick.VIRTUAL_PIXEL_TRANSPARENT)
 
     return
 }

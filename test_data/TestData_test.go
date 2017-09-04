@@ -1,9 +1,9 @@
 package test_data
 
 import (
-    "testing"
-    . "github.com/smartystreets/goconvey/convey"
     "encoding/json"
+    "testing"
+
     "gimly/models"
 )
 

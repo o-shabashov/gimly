@@ -58,7 +58,7 @@ func (p *PostData) ConvertPositioning() {
         // искажений, зависящий от количества точек на стороне.
         if p.Layers[i].DistortionType == DISTORT_POLYNOMIAL {
 
-            if  p.Layers[i].DistortionOrder == 0 {
+            if p.Layers[i].DistortionOrder == 0 {
                 numbPoints := len(p.Layers[i].DistortionMatrix) / NUMB_COORDINATES_POINT
 
                 if p.Layers[i].NumbPointsSide == 0 || p.Layers[i].NumbPointsSide == 2 {

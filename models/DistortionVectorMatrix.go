@@ -119,7 +119,7 @@ func subMatrix(matrix [][]DistortionVector, startRow int, startColumn int, endRo
     subMatrix := tempMatrix[startRow:endRow]
 
     for row, rowItems := range subMatrix {
-        subMatrix[row] = rowItems[startColumn:endColumn + startColumn]
+        subMatrix[row] = rowItems[startColumn:endColumn+startColumn]
     }
 
     return subMatrix
