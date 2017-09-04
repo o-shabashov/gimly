@@ -113,13 +113,31 @@ func TestLayersProcess(t *testing.T) {
         So(result.GetImageBlob(), ShouldHaveSameTypeAs, []byte{})
     })
 
-    Convey("Process distortion by main l", t, func() {
+    Convey("Process polynomial distortion by main l", t, func() {
         baseImage := imagick.NewMagickWand()
         pw := imagick.NewPixelWand()
         pw.SetColor("none")
 
         layer := Layer{}
         err := json.Unmarshal([]byte(test_data.MainLayer), &layer)
+        So(err, ShouldBeNil)
+
+        baseImage.NewImage(uint(layer.DesignWidth), uint(layer.DesignHeight), pw)
+
+        result, err := layer.ProcessDistort(baseImage)
+        So(err, ShouldBeNil)
+
+        So(result, ShouldHaveSameTypeAs, baseImage)
+        So(result.GetImageBlob(), ShouldHaveSameTypeAs, []byte{})
+    })
+
+    Convey("Process distortion by main l", t, func() {
+        baseImage := imagick.NewMagickWand()
+        pw := imagick.NewPixelWand()
+        pw.SetColor("none")
+
+        layer := Layer{}
+        err := json.Unmarshal([]byte(test_data.PartialDistortLayer), &layer)
         So(err, ShouldBeNil)
 
         baseImage.NewImage(uint(layer.DesignWidth), uint(layer.DesignHeight), pw)
