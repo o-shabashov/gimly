@@ -6,6 +6,9 @@ import (
 
 const DISTORT_POLYNOMIAL string = "polynomial"
 const DISTORT_PARTIAL string = "partial"
+const DISTORT_AFFINE string = "affine"
+const DISTORT_BILINEAR string = "bilinear"
+const DISTORT_SHEPARDS string = "shepards"
 
 const NUMB_COORDINATES_POINT int = 4
 
@@ -78,6 +81,7 @@ func (l Layer) Build(channel chan PositionMagicWand, errors chan error) {
             return
         }
     }
+    baseImage.WriteImage("bac")
 
     // Обрабатываем основной слой
     if l.Path != "" {
@@ -87,6 +91,8 @@ func (l Layer) Build(channel chan PositionMagicWand, errors chan error) {
             return
         }
     }
+    baseImage.WriteImage("main")
+
 
     // Искажение основного слоя, самая долгая операция
     if len(l.DistortionMatrix) != 0 {
@@ -96,6 +102,8 @@ func (l Layer) Build(channel chan PositionMagicWand, errors chan error) {
             return
         }
     }
+    baseImage.WriteImage("dis")
+
 
     // Накладываем слой наложения
     if l.OverlayPath != "" {
@@ -168,7 +176,7 @@ func (l Layer) ProcessMain(baseImage *imagick.MagickWand) (*imagick.MagickWand, 
     return baseImage, err
 }
 
-func (l Layer) ProcessOverlay(baseImage *imagick.MagickWand, ) (*imagick.MagickWand, error) {
+func (l Layer) ProcessOverlay(baseImage *imagick.MagickWand) (*imagick.MagickWand, error) {
     overlay := imagick.NewMagickWand()
 
     data, err := GetImageBlob(l.OverlayPath)
@@ -196,12 +204,36 @@ func (l Layer) ProcessDistort(baseImage *imagick.MagickWand) (bi *imagick.Magick
     if l.DistortionType == DISTORT_PARTIAL {
         bi, err = l.PartialDistort(baseImage)
     }
+    if l.DistortionType == DISTORT_AFFINE {
+        bi, err = l.AffineDistort(baseImage)
+    }
+    if l.DistortionType == DISTORT_BILINEAR {
+        bi, err = l.BilinearDistort(baseImage)
+    }
+    if l.DistortionType == DISTORT_SHEPARDS {
+        bi, err = l.ShepardsDistort(baseImage)
+    }
 
     return
 }
 
 func (l Layer) PolynomialDistort(baseImage *imagick.MagickWand) (*imagick.MagickWand, error) {
     err := baseImage.DistortImage(imagick.DISTORTION_POLYNOMIAL, l.DistortionMatrix, false)
+
+    return baseImage, err
+}
+func (l Layer) AffineDistort(baseImage *imagick.MagickWand) (*imagick.MagickWand, error) {
+    err := baseImage.DistortImage(imagick.DISTORTION_AFFINE, l.DistortionMatrix, false)
+
+    return baseImage, err
+}
+func (l Layer) BilinearDistort(baseImage *imagick.MagickWand) (*imagick.MagickWand, error) {
+    err := baseImage.DistortImage(imagick.DISTORTION_BILINEAR, l.DistortionMatrix, false)
+
+    return baseImage, err
+}
+func (l Layer) ShepardsDistort(baseImage *imagick.MagickWand) (*imagick.MagickWand, error) {
+    err := baseImage.DistortImage(imagick.DISTORTION_SHEPARDS, l.DistortionMatrix, false)
 
     return baseImage, err
 }
