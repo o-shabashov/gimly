@@ -116,7 +116,7 @@ func SplitMatrix(matrix [][]DistortionVector, rowSize int, columnSize int) (part
 func subMatrix(matrix [][]DistortionVector, startRow int, startColumn int, endRow int, endColumn int) ([][]DistortionVector) {
     tempMatrix := make([][]DistortionVector, len(matrix))
     copy(tempMatrix, matrix)
-    subMatrix := tempMatrix[startRow:endRow]
+    subMatrix := tempMatrix[startRow:endRow+startRow]
 
     for row, rowItems := range subMatrix {
         subMatrix[row] = rowItems[startColumn:endColumn+startColumn]
