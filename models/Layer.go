@@ -43,10 +43,10 @@ type Layer struct {
     BackgroundLayout string    `json:"background_layout"`
 
     // Вообще этих полей нет в JSON схеме. Но они добавляются в процессе конвертации PostData.ConvertPositioning()
-    OverlayWidth  float64   `json:"overlay_width"`
-    OverlayHeight float64   `json:"overlay_height"`
-    OverlayLeft   float64   `json:"overlay_left"`
-    OverlayTop    float64   `json:"overlay_top"`
+    OverlayWidth  float64 `json:"overlay_width"`
+    OverlayHeight float64 `json:"overlay_height"`
+    OverlayLeft   float64 `json:"overlay_left"`
+    OverlayTop    float64 `json:"overlay_top"`
 }
 
 func (l Layer) Build(channel chan PositionMagicWand, errors chan error) {
@@ -93,7 +93,6 @@ func (l Layer) Build(channel chan PositionMagicWand, errors chan error) {
     }
     baseImage.WriteImage("main")
 
-
     // Искажение основного слоя, самая долгая операция
     if len(l.DistortionMatrix) != 0 {
         baseImage, err = l.ProcessDistort(baseImage)
@@ -103,7 +102,6 @@ func (l Layer) Build(channel chan PositionMagicWand, errors chan error) {
         }
     }
     baseImage.WriteImage("dis")
-
 
     // Накладываем слой наложения
     if l.OverlayPath != "" {
