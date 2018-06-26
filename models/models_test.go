@@ -95,7 +95,7 @@ func TestLayersProcess(t *testing.T) {
         So(result.GetImageBlob(), ShouldHaveSameTypeAs, []byte{})
     })
 
-    Convey("Process overlay l", t, func() {
+    Convey("Process overlay layer", t, func() {
         baseImage := imagick.NewMagickWand()
         pw := imagick.NewPixelWand()
         pw.SetColor("none")
@@ -113,7 +113,7 @@ func TestLayersProcess(t *testing.T) {
         So(result.GetImageBlob(), ShouldHaveSameTypeAs, []byte{})
     })
 
-    Convey("Process polynomial distortion by main l", t, func() {
+    Convey("Process polynomial distortion by main layer", t, func() {
         baseImage := imagick.NewMagickWand()
         pw := imagick.NewPixelWand()
         pw.SetColor("none")
@@ -131,7 +131,7 @@ func TestLayersProcess(t *testing.T) {
         So(result.GetImageBlob(), ShouldHaveSameTypeAs, []byte{})
     })
 
-    Convey("Process distortion by main l", t, func() {
+    Convey("Process distortion by main layer", t, func() {
         baseImage := imagick.NewMagickWand()
         pw := imagick.NewPixelWand()
         pw.SetColor("none")
