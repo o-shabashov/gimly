@@ -6,7 +6,7 @@ import (
     "os"
     "sort"
 
-    "gimly/models"
+    "github.com/o-shabashov/gimly/models"
 
     "github.com/ant0ine/go-json-rest/rest"
     "github.com/joho/godotenv"

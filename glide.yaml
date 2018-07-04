@@ -1,4 +1,4 @@
-package: gimly
+package: github.com/o-shabashov/gimly
 import:
 - package: github.com/joho/godotenv
 - package: github.com/ant0ine/go-json-rest/rest

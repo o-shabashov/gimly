@@ -6,7 +6,7 @@ import (
 
     . "github.com/smartystreets/goconvey/convey"
 
-    "gimly/models"
+    "github.com/o-shabashov/gimly/models"
 )
 
 func TestValidTestdata(t *testing.T) {

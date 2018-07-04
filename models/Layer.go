@@ -4,13 +4,13 @@ import (
     "gopkg.in/gographics/imagick.v2/imagick"
 )
 
-const DISTORT_POLYNOMIAL string = "polynomial"
-const DISTORT_PARTIAL string = "partial"
-const DISTORT_AFFINE string = "affine"
-const DISTORT_BILINEAR string = "bilinear"
-const DISTORT_SHEPARDS string = "shepards"
+const DISTORT_POLYNOMIAL = "polynomial"
+const DISTORT_PARTIAL = "partial"
+const DISTORT_AFFINE = "affine"
+const DISTORT_BILINEAR = "bilinear"
+const DISTORT_SHEPARDS = "shepards"
 
-const NUMB_COORDINATES_POINT int = 4
+const NUMB_COORDINATES_POINT = 4
 
 // Каждая часть изображения будет расширена в ширину и высоту на это значение в процентах
 const PART_SCALE = 1
@@ -81,7 +81,6 @@ func (l Layer) Build(channel chan PositionMagicWand, errors chan error) {
             return
         }
     }
-    baseImage.WriteImage("bac")
 
     // Обрабатываем основной слой
     if l.Path != "" {
@@ -91,7 +90,6 @@ func (l Layer) Build(channel chan PositionMagicWand, errors chan error) {
             return
         }
     }
-    baseImage.WriteImage("main")
 
     // Искажение основного слоя, самая долгая операция
     if len(l.DistortionMatrix) != 0 {
@@ -101,7 +99,6 @@ func (l Layer) Build(channel chan PositionMagicWand, errors chan error) {
             return
         }
     }
-    baseImage.WriteImage("dis")
 
     // Накладываем слой наложения
     if l.OverlayPath != "" {

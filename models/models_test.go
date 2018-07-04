@@ -4,7 +4,7 @@ import (
     "encoding/json"
     "testing"
 
-    "gimly/test_data"
+    "github.com/o-shabashov/gimly/test_data"
 
     . "github.com/smartystreets/goconvey/convey"
     "github.com/xeipuuv/gojsonschema"
