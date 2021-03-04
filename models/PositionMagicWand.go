@@ -6,6 +6,6 @@ import "gopkg.in/gographics/imagick.v2/imagick"
 // Это нужно для передачи в основной тред информации о позиции и координатах смещения оригинального слоя.
 // И чтобы не выдумывать новые аттрибуты, было решено для упрощения передавать весь объект models.Layer.
 type PositionMagicWand struct {
-    Layer     Layer
-    MagicWand *imagick.MagickWand
+	Layer     Layer
+	MagicWand *imagick.MagickWand
 }

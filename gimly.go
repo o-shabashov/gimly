@@ -1,127 +1,127 @@
 package main
 
 import (
-    "log"
-    "net/http"
-    "os"
-    "sort"
+	"log"
+	"net/http"
+	"os"
+	"sort"
 
-    "github.com/o-shabashov/gimly/models"
+	"github.com/oshabashov/gimly/models"
 
-    "github.com/ant0ine/go-json-rest/rest"
-    "github.com/joho/godotenv"
-    "gopkg.in/gographics/imagick.v2/imagick"
+	"github.com/ant0ine/go-json-rest/rest"
+	"github.com/joho/godotenv"
+	"gopkg.in/gographics/imagick.v2/imagick"
 )
 
 func main() {
-    err := godotenv.Load()
-    if err != nil {
-        panic("Error loading .env file")
-    }
+	err := godotenv.Load()
+	if err != nil {
+		panic("Error loading .env file")
+	}
 
-    api := rest.NewApi()
+	api := rest.NewApi()
 
-    // Веб страница со статусом, например http://gimly.dev/.status
-    statusMw := &rest.StatusMiddleware{}
+	// Веб страница со статусом, например http://gimly.dev/.status
+	statusMw := &rest.StatusMiddleware{}
 
-    api.Use(statusMw)
-    api.Use(rest.DefaultDevStack...)
+	api.Use(statusMw)
+	api.Use(rest.DefaultDevStack...)
 
-    // Маршрутизация
-    router, err := rest.MakeRouter(
-        rest.Post("/generate-image", GetImage),
+	// Маршрутизация
+	router, err := rest.MakeRouter(
+		rest.Post("/generate-image", GetImage),
 
-        rest.Get("/.status", func(w rest.ResponseWriter, r *rest.Request) {
-            w.WriteJson(statusMw.GetStatus())
-        }),
-    )
+		rest.Get("/.status", func(w rest.ResponseWriter, r *rest.Request) {
+			w.WriteJson(statusMw.GetStatus())
+		}),
+	)
 
-    if err != nil {
-        log.Fatal(err)
-    }
-    api.SetApp(router)
-    log.Fatal(http.ListenAndServe(os.Getenv("GIMLY_ADDRESS"), api.MakeHandler()))
+	if err != nil {
+		log.Fatal(err)
+	}
+	api.SetApp(router)
+	log.Fatal(http.ListenAndServe(os.Getenv("GIMLY_ADDRESS"), api.MakeHandler()))
 }
 
 func GetImage(w rest.ResponseWriter, r *rest.Request) {
-    imagick.Initialize()
-    defer imagick.Terminate()
+	imagick.Initialize()
+	defer imagick.Terminate()
 
-    // Сюда запишем данные от горутин в виде позиция - слой
-    mapPositionMw := make(map[int]models.PositionMagicWand)
+	// Сюда запишем данные от горутин в виде позиция - слой
+	mapPositionMw := make(map[int]models.PositionMagicWand)
 
-    // Чтение и валидация запроса
-    postData := models.PostData{}
-    if err := postData.Validate(r); err != nil {
-        rest.Error(w, err.Error(), http.StatusInternalServerError)
-        return
-    }
+	// Чтение и валидация запроса
+	postData := models.PostData{}
+	if err := postData.Validate(r); err != nil {
+		rest.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-    // Перевод процентного позиционирования в пиксельное TODO ошибки
-    postData.ConvertPositioning()
+	// Перевод процентного позиционирования в пиксельное TODO ошибки
+	postData.ConvertPositioning()
 
-    // В этот канал будем отправлять искажённые слои
-    channel := make(chan models.PositionMagicWand, len(postData.Layers))
+	// В этот канал будем отправлять искажённые слои
+	channel := make(chan models.PositionMagicWand, len(postData.Layers))
 
-    // А в этот канал будем отправлять ошибки
-    errors := make(chan error)
+	// А в этот канал будем отправлять ошибки
+	errors := make(chan error)
 
-    // Финальное изображение
-    image := imagick.NewMagickWand()
+	// Финальное изображение
+	image := imagick.NewMagickWand()
 
-    // Инит финального изображения без цвета
-    pw := imagick.NewPixelWand()
-    pw.SetColor("none")
+	// Инит финального изображения без цвета
+	pw := imagick.NewPixelWand()
+	pw.SetColor("none")
 
-    image.NewImage(uint(postData.Height), uint(postData.Width), pw)
-    image.SetImageFormat(postData.Format)
+	image.NewImage(uint(postData.Height), uint(postData.Width), pw)
+	image.SetImageFormat(postData.Format)
 
-    // Чтобы на месте перемещённых пикселей была прозрачность
-    image.SetImageVirtualPixelMethod(imagick.VIRTUAL_PIXEL_TRANSPARENT)
+	// Чтобы на месте перемещённых пикселей была прозрачность
+	image.SetImageVirtualPixelMethod(imagick.VIRTUAL_PIXEL_TRANSPARENT)
 
-    // Запустить обработку всех слоёв в отдельных потоках, без учёта порядка, результат прилетит в канал channel
-    for _, layer := range postData.Layers {
-        go layer.Build(channel, errors)
-    }
+	// Запустить обработку всех слоёв в отдельных потоках, без учёта порядка, результат прилетит в канал channel
+	for _, layer := range postData.Layers {
+		go layer.Build(channel, errors)
+	}
 
-    // Подписываемся на оба канала, ждём данных от горутин и записываем их в массив в виде позиция - слой
-    for range postData.Layers {
-        select {
-        case pmw := <-channel:
-            mapPositionMw[pmw.Layer.Position] = pmw
-        case err := <-errors:
-            rest.Error(w, err.Error(), 500) // TODO нормальные коды ошибок
-        }
-    }
+	// Подписываемся на оба канала, ждём данных от горутин и записываем их в массив в виде позиция - слой
+	for range postData.Layers {
+		select {
+		case pmw := <-channel:
+			mapPositionMw[pmw.Layer.Position] = pmw
+		case err := <-errors:
+			rest.Error(w, err.Error(), 500) // TODO нормальные коды ошибок
+		}
+	}
 
-    // Сортируем слои по порядку https://stackoverflow.com/questions/23330781/sort-golang-map-values-by-keys
-    var keys []int
-    for i := range mapPositionMw {
-        keys = append(keys, i)
-    }
-    sort.Ints(keys)
+	// Сортируем слои по порядку https://stackoverflow.com/questions/23330781/sort-golang-map-values-by-keys
+	var keys []int
+	for i := range mapPositionMw {
+		keys = append(keys, i)
+	}
+	sort.Ints(keys)
 
-    // Накладываем слои по порядку на финальное изображение
-    for _, v := range keys {
-        err := image.CompositeImage(
-            mapPositionMw[v].MagicWand,
-            imagick.COMPOSITE_OP_OVER,
-            int(mapPositionMw[v].Layer.Left),
-            int(mapPositionMw[v].Layer.Top),
-        )
+	// Накладываем слои по порядку на финальное изображение
+	for _, v := range keys {
+		err := image.CompositeImage(
+			mapPositionMw[v].MagicWand,
+			imagick.COMPOSITE_OP_OVER,
+			int(mapPositionMw[v].Layer.Left),
+			int(mapPositionMw[v].Layer.Top),
+		)
 
-        // Без этого горутины зависнут и рест не отдаст контент, т.к. *MagickWand передаётся в канал по ссылке внутри
-        // другой структуры, и не может сам себя уничтожить.
-        mapPositionMw[v].MagicWand.Destroy()
+		// Без этого горутины зависнут и рест не отдаст контент, т.к. *MagickWand передаётся в канал по ссылке внутри
+		// другой структуры, и не может сам себя уничтожить.
+		mapPositionMw[v].MagicWand.Destroy()
 
-        if err != nil {
-            rest.Error(w, err.Error(), 500)
-        }
-    }
+		if err != nil {
+			rest.Error(w, err.Error(), 500)
+		}
+	}
 
-    w.Header().Set("Content-Type", "image/"+postData.Format)
-    w.(http.ResponseWriter).Write(image.GetImageBlob())
+	w.Header().Set("Content-Type", "image/"+postData.Format)
+	w.(http.ResponseWriter).Write(image.GetImageBlob())
 
-    // Освобождаем память, нам ведь не нужны утечки?
-    image.Destroy()
+	// Освобождаем память, нам ведь не нужны утечки?
+	image.Destroy()
 }
