@@ -11,7 +11,7 @@ import (
 	"gopkg.in/gographics/imagick.v2/imagick"
 )
 
-const testDesignURL = "http://catalog.fm.vsemayki.ru/20283848485940a9c5b6b982.28126856"
+const testDesignURL = "http://catalog.fm.example.com/20283848485940a9c5b6b982.28126856"
 
 func TestPostDataStruct(t *testing.T) {
 

@@ -7,7 +7,7 @@ const RequestPolynomialDistort = `
   "format": "jpeg",
   "layers": [
     {
-      "path": "http:\/\/catalog.fm.vsemayki.ru\/414436646597807f42f48b3.27402821",
+      "path": "http:\/\/catalog.fm.example.com\/414436646597807f42f48b3.27402821",
       "type": "image",
       "position": 0,
       "left": 0,
@@ -33,11 +33,11 @@ const RequestPolynomialDistort = `
       "distortion_type": "polynomial",
       "numb_points_side": 7,
       "distortion_matrix": [0.09732,1.78571,0,9.06593,16.74777,1.78571],
-      "overlay_path": "http:\/\/catalog.fm.vsemayki.ru\/20283848485940a9c5b6b982.28126856",
-      "path": "http:\/\/generator.fm.vsemayki.ru\/147673297059510edb058342.10982043"
+      "overlay_path": "http:\/\/catalog.fm.example.com\/20283848485940a9c5b6b982.28126856",
+      "path": "http:\/\/generator.fm.example.com\/147673297059510edb058342.10982043"
     },
     {
-      "path": "http:\/\/catalog.fm.vsemayki.ru\/633179955592e5c32f28729.10500083",
+      "path": "http:\/\/catalog.fm.example.com\/633179955592e5c32f28729.10500083",
       "type": "image",
       "position": 2,
       "left": 0,
@@ -55,7 +55,7 @@ const RequestPolynomialDistort = `
 
 const BackgroundLayer = `
 {
-  "background_path": "http:\/\/catalog.fm.vsemayki.ru\/633179955592e5c32f28729.10500083",
+  "background_path": "http:\/\/catalog.fm.example.com\/633179955592e5c32f28729.10500083",
   "type": "background",
   "background_layout": "tile",
   "position": 0,
@@ -86,8 +86,8 @@ const MainLayer = `
   "distortion_order": 0,
   "numb_points_side": 7,
   "distortion_matrix": [1,0.09732,1.78571,0,9.06593,16.74777,1.78571,0.09732,1.78571,0,9.06593,16.74777,1.78571],
-  "overlay_path": "http:\/\/catalog.fm.vsemayki.ru\/20283848485940a9c5b6b982.28126856",
-  "path": "http:\/\/generator.fm.vsemayki.ru\/147673297059510edb058342.10982043"
+  "overlay_path": "http:\/\/catalog.fm.example.com\/20283848485940a9c5b6b982.28126856",
+  "path": "http:\/\/generator.fm.example.com\/147673297059510edb058342.10982043"
 }
 `
 
@@ -107,7 +107,7 @@ const OverlayLayer = `
   "distortion_order": 0,
   "numb_points_side": 7,
   "distortion_matrix": [0.09732,1.78571,0,9.06593,16.74777,1.78571,16.74777,1.78571],
-  "overlay_path": "http:\/\/catalog.fm.vsemayki.ru\/20283848485940a9c5b6b982.28126856",
+  "overlay_path": "http:\/\/catalog.fm.example.com\/20283848485940a9c5b6b982.28126856",
   "overlay_width": 100,
   "overlay_height": 100,
   "overlay_left": 10,
@@ -117,7 +117,7 @@ const OverlayLayer = `
 
 const BuildLayer = `
 {
-  "background_path": "http:\/\/catalog.fm.vsemayki.ru\/633179955592e5c32f28729.10500083",
+  "background_path": "http:\/\/catalog.fm.example.com\/633179955592e5c32f28729.10500083",
   "background_layout": "tile",
   "top": 2.125,
   "left": -14,
@@ -133,8 +133,8 @@ const BuildLayer = `
   "distortion_order": 0,
   "numb_points_side": 7,
   "distortion_matrix": [1,0.09732,1.78571,0,9.06593,16.74777,1.78571,0.09732,1.78571,0,9.06593,16.74777,1.78571],
-  "overlay_path": "http:\/\/catalog.fm.vsemayki.ru\/20283848485940a9c5b6b982.28126856",
-  "path": "http:\/\/generator.fm.vsemayki.ru\/147673297059510edb058342.10982043",
+  "overlay_path": "http:\/\/catalog.fm.example.com\/20283848485940a9c5b6b982.28126856",
+  "path": "http:\/\/generator.fm.example.com\/147673297059510edb058342.10982043",
   "overlay_width": 100,
   "overlay_height": 100,
   "overlay_left": 10,
@@ -164,6 +164,6 @@ const PartialDistortLayer = `
     99.31787,22.70138,99.83326,24.25241,100,26.08544,99.83326,27.77747,99.31787,40.04468,99.83326,40.04468,94.64939,
     54.14492,99.83326,52.31189,87.72169,66.55313,99.83326,58.939,82.81037,73.18024,99.83326,65.98912,77.86903,100,
     99.83326,75.01327,66.5457],
-    "path": "http://generator.fm.vsemayki.ru/699546773594538f0dd7144.33205872"
+    "path": "http://generator.fm.example.com/699546773594538f0dd7144.33205872"
     }
 `
